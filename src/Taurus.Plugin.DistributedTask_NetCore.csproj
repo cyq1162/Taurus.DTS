@@ -1,0 +1,47 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+	  <AssemblyName>Taurus.DTS</AssemblyName>
+	  <AssemblyVersion>3.2.0</AssemblyVersion>
+	  <FileVersion>3.2.0</FileVersion>
+	  <Authors>路过秋天</Authors>
+	  <Company>路过秋天 （2024-01-14）</Company>
+	  <Copyright>Copyright ©  路过秋天 2024-2124</Copyright>
+	  <AssemblyTitle>Taurus.DTS 分布式任务框架 .Net Core 版本</AssemblyTitle>
+	  <Product>Taurus.DTS 分布式任务框架 .NET Core 版本</Product>
+	  <Description>Taurus.DTS 是一款用于 .Net 或 .Net Core 的分布任务的框架，支持任务即时订阅、延时任务、定时任务。</Description>
+	  <PackageProjectUrl>https://github.com/cyq1162/Taurus.DTC</PackageProjectUrl>
+	  <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
+	  <GenerateDocumentationFile>True</GenerateDocumentationFile>
+	  <IsPublishable>False</IsPublishable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="MQ\Rabbit\DotNet\**" />
+    <Compile Remove="Properties\**" />
+    <EmbeddedResource Remove="MQ\Rabbit\DotNet\**" />
+    <EmbeddedResource Remove="Properties\**" />
+    <None Remove="MQ\Rabbit\DotNet\**" />
+    <None Remove="Properties\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="MQ\Kafka\MQ.Kafka.NoSupport.cs" />
+    <Compile Remove="MQ\Rabbit\MQ.Rabbit.NoSupport.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Confluent.Kafka" Version="2.3.0" />
+    <PackageReference Include="RabbitMQ.Client" Version="6.8.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\cyqdata.git\cyqdata\src\CYQ.Data_NetCore.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="MQ\Rabbit\DotNet\" />
+  </ItemGroup>
+
+</Project>
