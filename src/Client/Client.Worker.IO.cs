@@ -24,11 +24,17 @@ namespace Taurus.Plugin.DistributedTask
                     {
                         return "DTS.Client:" + key;
                     }
+                    public static bool Write(TaskTable table)
+                    {
+                        bool isWriteTxt = false;
+                        return Write(table, out isWriteTxt);
+                    }
                     /// <summary>
                     /// 写入数据
                     /// </summary>
-                    public static bool Write(TaskTable table)
+                    public static bool Write(TaskTable table, out bool isWriteTxt)
                     {
+                        isWriteTxt = false;
                         var disCache = DistributedCache.Instance;
                         string id = table.MsgID;
                         string json = table.ToJson();
@@ -49,6 +55,7 @@ namespace Taurus.Plugin.DistributedTask
                             isOK = IOHelper.Write(path, json);
                             if (isOK)
                             {
+                                isWriteTxt = true;
                                 Log.Print("IO.Write : " + json);
                             }
                         }
@@ -114,7 +121,7 @@ namespace Taurus.Plugin.DistributedTask
                             {
                                 foreach (string id in ids.Split(','))
                                 {
-                                    if (string.IsNullOrEmpty(id)) { continue;}
+                                    if (string.IsNullOrEmpty(id)) { continue; }
                                     var json = disCache.Get<string>(GetKey(id));
                                     if (!string.IsNullOrEmpty(json))
                                     {

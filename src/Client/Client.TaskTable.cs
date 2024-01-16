@@ -92,38 +92,38 @@ namespace Taurus.Plugin.DistributedTask
                     }
                 }
 
-                private string _ExChange;
-                /// <summary>
-                /// 发送交换机名称
-                /// </summary>
-                [Length(50)]
-                public string ExChange
-                {
-                    get { return _ExChange; }
-                    set { _ExChange = value; }
-                }
+                //private string _ExChange;
+                ///// <summary>
+                ///// 发送交换机名称
+                ///// </summary>
+                //[Length(50)]
+                //public string ExChange
+                //{
+                //    get { return _ExChange; }
+                //    set { _ExChange = value; }
+                //}
 
-                private string _QueueName;
-                /// <summary>
-                /// 发送队列名称
-                /// </summary>
-                [Length(50)]
-                public string QueueName
-                {
-                    get { return _QueueName; }
-                    set { _QueueName = value; }
-                }
+                //private string _QueueName;
+                ///// <summary>
+                ///// 发送队列名称
+                ///// </summary>
+                //[Length(50)]
+                //public string QueueName
+                //{
+                //    get { return _QueueName; }
+                //    set { _QueueName = value; }
+                //}
 
-                private string _CallBackName;
-                /// <summary>
-                /// 队列监听名称
-                /// </summary>
-                [Length(50)]
-                public string CallBackName
-                {
-                    get { return _CallBackName; }
-                    set { _CallBackName = value; }
-                }
+                //private string _CallBackName;
+                ///// <summary>
+                ///// 队列监听名称
+                ///// </summary>
+                //[Length(50)]
+                //public string CallBackName
+                //{
+                //    get { return _CallBackName; }
+                //    set { _CallBackName = value; }
+                //}
 
                 private string _TaskKey;
                 /// <summary>
@@ -234,9 +234,9 @@ namespace Taurus.Plugin.DistributedTask
                     MQMsg msg = new MQMsg();
                     msg.MsgID = this.MsgID;
                     msg.Content = this.Content;
-                    msg.QueueName = this.QueueName;
-                    msg.CallBackName = this.CallBackName;
-                    msg.ExChange = this.ExChange;
+                    //msg.QueueName = this.QueueName;
+                    //msg.CallBackName = this.CallBackName;
+                    //msg.ExChange = this.ExChange;
                     msg.TaskType = this.TaskType;
                     msg.TaskKey = this.TaskKey;
                     msg.CallBackKey = this.CallBackKey;
@@ -252,18 +252,18 @@ namespace Taurus.Plugin.DistributedTask
                         js.Add("ID", this.ID.Value);
                     }
                     js.Add("MsgID", this.MsgID);
-                    if (this.ExChange != null)
-                    {
-                        js.Add("ExChange", this.ExChange);
-                    }
-                    if (this.QueueName != null)
-                    {
-                        js.Add("QueueName", this.QueueName);
-                    }
-                    if (this.CallBackName != null)
-                    {
-                        js.Add("CallBackName", this.CallBackName);
-                    }
+                    //if (this.ExChange != null)
+                    //{
+                    //    js.Add("ExChange", this.ExChange);
+                    //}
+                    //if (this.QueueName != null)
+                    //{
+                    //    js.Add("QueueName", this.QueueName);
+                    //}
+                    //if (this.CallBackName != null)
+                    //{
+                    //    js.Add("CallBackName", this.CallBackName);
+                    //}
                     if (this.Content != null)
                     {
                         js.Add("Content", this.Content);

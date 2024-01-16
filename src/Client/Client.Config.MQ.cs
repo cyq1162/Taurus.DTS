@@ -18,6 +18,7 @@ namespace Taurus.Plugin.DistributedTask
             /// </summary>
             internal static class MQ
             {
+                #region Rabbit
 
                 /// <summary>
                 /// 项目交换机：绑定所有 Client 项目队列
@@ -26,7 +27,7 @@ namespace Taurus.Plugin.DistributedTask
                 {
                     get
                     {
-                        return "DTS_Client_Project";
+                        return "DTS_Client_Proj";
                     }
                 }
 
@@ -48,7 +49,7 @@ namespace Taurus.Plugin.DistributedTask
                 {
                     get
                     {
-                        return "DTS_Client_Process";
+                        return "DTS_Client_Proc";
                     }
                 }
 
@@ -64,15 +65,66 @@ namespace Taurus.Plugin.DistributedTask
                 }
 
                 /// <summary>
-                /// 延时队列名。
+                /// 延时队列名，所有项目共享。
                 /// </summary>
                 internal static string DelayQueue
                 {
                     get
                     {
-                        return "DTS_Client_" + ProjectName + "_Delay_Minute";
+                        return "DTS_Delay_Minute";
                     }
                 }
+
+                #endregion
+
+                #region Kafka
+
+                /// <summary>
+                /// 项目主题：以项目为单位，竞争消费。
+                /// </summary>
+                internal static string ProjectTopic
+                {
+                    get
+                    {
+                        return ProjectExChange + "_" + ProjectName;
+                    }
+                }
+
+                /// <summary>
+                /// 项目组：以项目为单位，竞争消费。
+                /// </summary>
+                internal static string ProjectGroup
+                {
+                    get
+                    {
+                        return ProjectTopic;
+                    }
+                }
+
+
+                /// <summary>
+                /// 进程主题：以进程为单位，从连接开始读取数据。
+                /// </summary>
+                internal static string ProcessTopic
+                {
+                    get
+                    {
+                        return ProcessExChange + "_" + ProjectName;
+                    }
+                }
+
+                /// <summary>
+                /// 进程主题：以进程为单位，从连接开始读取数据。
+                /// </summary>
+                internal static string ProcessGroup
+                {
+                    get
+                    {
+                        return ProcessExChange + "_" + pidName;
+                    }
+                }
+
+                #endregion
             }
 
         }

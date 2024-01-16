@@ -24,11 +24,11 @@ namespace Taurus.Plugin.DistributedTask
         public string CallBackKey { get; set; }
 
         /// <summary>
-        /// 用于发送的交换机名称【对应 kafka 的 topic】
+        /// 用于发送的交换机名称【对应 kafka 的 查找所有主题】
         /// </summary>
         public string ExChange { get; set; }
         /// <summary>
-        /// 用于发送的队列名称【对应 kafka 的 groupID】
+        /// 用于发送的队列名称【对应 kafka 的 topic】
         /// </summary>
         public string QueueName { get; set; }
 

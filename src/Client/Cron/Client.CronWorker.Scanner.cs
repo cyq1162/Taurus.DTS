@@ -73,7 +73,23 @@ namespace Taurus.Plugin.DistributedTask
                                     var table = _dtsDic[key];
                                     if (table != null && !string.IsNullOrEmpty(table.Cron))
                                     {
+                                        bool isDelayTask = table.IsDelayTask.HasValue && table.IsDelayTask.Value;
                                         string dateString = CronHelper.GetNextDateTime(table.Cron);
+                                        if (dateString == null)
+                                        {
+                                            if (isDelayTask)
+                                            {
+                                                //检测是否因为服务故障，而没有执行。
+                                                if (table.ConfirmNum.HasValue && table.ConfirmNum.Value > 0)
+                                                {
+                                                    CronWorker.Delete(table.MsgID);
+                                                    continue;
+                                                }
+                                                CronWorker.ReadyToWork(table);//异步生产成任务
+                                                CronWorker.Delete(table.MsgID);//删除Cron
+                                                continue;
+                                            }
+                                        }
                                         if (dateString == nowString)
                                         {
                                             string taskKey = table.MsgID + dateString;
@@ -85,6 +101,10 @@ namespace Taurus.Plugin.DistributedTask
                                             empty = 0;
                                             taskKeys.Add(taskKey);
                                             CronWorker.ReadyToWork(table);//异步生产成任务
+                                            if (isDelayTask)
+                                            {
+                                                CronWorker.Delete(table.MsgID);
+                                            }
                                             continue;
                                         }
                                     }

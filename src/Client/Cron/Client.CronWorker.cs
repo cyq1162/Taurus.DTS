@@ -3,7 +3,9 @@ using CYQ.Data;
 using CYQ.Data.Json;
 using System;
 using System.Collections.Concurrent;
+using System.Security.Principal;
 using System.Threading;
+using static Taurus.Plugin.DistributedTask.DTS.Client;
 
 
 namespace Taurus.Plugin.DistributedTask
@@ -17,7 +19,7 @@ namespace Taurus.Plugin.DistributedTask
             /// </summary>
             internal static partial class CronWorker
             {
-                internal static bool Add(CronTable table)
+                public static bool Add(CronTable table)
                 {
                     bool result = false;
                     if (!string.IsNullOrEmpty(DTSConfig.Client.Conn) && table.Insert(InsertOp.None))
@@ -39,14 +41,14 @@ namespace Taurus.Plugin.DistributedTask
                     return result;
                 }
 
-                internal static bool Remove(string content)
+                public static bool Remove(string content)
                 {
                     if (string.IsNullOrEmpty(content)) { return false; }
                     string taskKey = JsonHelper.GetValue(content, "TaskKey");
                     string cron = JsonHelper.GetValue(content, "Cron");
                     return Remove(taskKey, cron);
                 }
-                internal static bool Remove(string taskKey, string cron)
+                private static bool Remove(string taskKey, string cron)
                 {
                     if (string.IsNullOrEmpty(taskKey)) { return false; }
                     CronTable cronTable = CronWorker.IO.SearchCronTable(taskKey, cron);
@@ -67,7 +69,7 @@ namespace Taurus.Plugin.DistributedTask
                                 where += " and Cron=:?Cron";
                                 table.SetPara("Cron", cron);
                             }
-                            if (table.Fill(where))  
+                            if (table.Fill(where))
                             {
                                 if (Scanner.Remove(table.MsgID))
                                 {
@@ -83,6 +85,24 @@ namespace Taurus.Plugin.DistributedTask
 
                     return false;
                 }
+
+                internal static bool Delete(string msgID)
+                {
+                    Scanner.Remove(msgID);
+                    bool result = CronWorker.IO.DeleteCronTable(msgID, TaskType.Cron.ToString());
+                    if (!string.IsNullOrEmpty(DTSConfig.Client.Conn))
+                    {
+                        using (CronTable table = new CronTable())
+                        {
+                            if (table.Delete(msgID))
+                            {
+                                result = true;
+                            }
+                        }
+                    }
+                    return result;
+                }
+
             }
 
             internal static partial class CronWorker
@@ -157,8 +177,9 @@ namespace Taurus.Plugin.DistributedTask
                                         }
                                     }
 
+                                    TaskType taskType = (table.IsDelayTask.HasValue && table.IsDelayTask.Value) ? TaskType.Delay : TaskType.Cron;
                                     //发起一个即时任务。
-                                    Instant.PublishAsync(table.Content, table.TaskKey, table.CallBackKey, table.MsgID);
+                                    Instant.PublishAsync(taskType, table.Content, table.TaskKey, table.CallBackKey, table.MsgID);
                                 }
                             }
 

@@ -15,16 +15,32 @@ namespace Taurus.Plugin.DistributedTask
 
             internal static void OnReceived(MQMsg msg)
             {
-                //如果客户端服务重启，增加投递失败=》改为广播回应。
-                msg.ExChange = DTSConfig.Client.MQ.ProcessExChange;//以广播回应。
+                MQType mqType = MQ.Server.MQType;
+                if (mqType == MQType.Rabbit)
+                {
+                    // RabbitMQ 用临时队列，如果客户端服务重启，回调临时队列投递失效=》以广播回应。
+                    msg.ExChange = DTSConfig.Client.MQ.ProcessExChange;//以广播回应。
+                    msg.CallBackName = DTSConfig.Server.MQ.ProcessQueue;
+                }
+                else if (mqType == MQType.Kafka)
+                {
+                    bool isWriteTxt = string.IsNullOrEmpty(DTSConfig.Server.Conn) && DistributedLock.Instance.LockType == LockType.Local;
+                    msg.CallBackName = isWriteTxt ? DTSConfig.Server.MQ.ProcessTopic : DTSConfig.Server.MQ.ProjectTopic;
+                }
 
                 Log.Print("MQ.OnReceived : " + msg.ToJson());
                 bool isDeleteAck = msg.IsDeleteAck.HasValue && msg.IsDeleteAck.Value;
-                DTSConsole.WriteDebugLine("Server.MQ.OnReceived : " + msg.MsgID + " - " + msg.TaskType + " - " + msg.CallBackKey + (isDeleteAck ? " - IsDeleteAck :" + msg.IsDeleteAck : ""));
+                DTSConsole.WriteDebugLine("Server.MQ.OnReceived : " + msg.MsgID + " - " + msg.TaskType + " - " + (isDeleteAck ? " - DeleteAck" : "") + " - NextTo :" + msg.QueueName);
+
                 if (isDeleteAck)
                 {
                     //打印分隔线，以便查看
-                    DTSConsole.WriteDebugLine("----------------------------------------------------------------");
+                    DTSConsole.WriteDebugLine("------------------------End  ：" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss:fff") + "-------------------------");
+                }
+                else
+                {
+                    //打印分隔线，以便查看
+                    DTSConsole.WriteDebugLine("------------------------Start：" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss:fff") + "-------------------------");
                 }
 
                 var localLock = DistributedLock.Local;
@@ -76,7 +92,6 @@ namespace Taurus.Plugin.DistributedTask
                     return;
                 }
 
-                msg.CallBackName = DTSConfig.Server.MQ.ProcessQueue;
 
                 #region 检测是否已执行过。
                 using (TaskTable table = new TaskTable())
@@ -102,8 +117,8 @@ namespace Taurus.Plugin.DistributedTask
                     object result = method.Invoke(obj, new object[] { para });
                     if (result is bool && !(bool)result) { return; }
                     returnContent = para.CallBackContent;
-                    Log.Print("Execute." + msg.TaskType + ".Subscribe.Method : " + method.Name);
-                    DTSConsole.WriteDebugLine("Server.Execute." + msg.TaskType + ".Subscribe.Method : " + method.Name);
+                    Log.Print("Execute." + msg.TaskType + ".Method : " + method.Name + " - SubKey :" + msg.CallBackKey);
+                    DTSConsole.WriteDebugLine("Server.Execute." + msg.TaskType + ".Method : " + method.Name + " - SubKey :" + msg.CallBackKey);
                 }
                 catch (Exception err)
                 {
@@ -122,8 +137,8 @@ namespace Taurus.Plugin.DistributedTask
                 {
                     //开启新任务，上面已经反转，直接赋值即可。
                     table.TaskType = msg.TaskType;
-                    table.QueueName = msg.QueueName;
-                    table.CallBackName = msg.CallBackName;
+                    //table.QueueName = msg.QueueName;
+                    //table.CallBackName = msg.CallBackName;
                     table.TaskKey = msg.TaskKey;
                     table.CallBackKey = msg.CallBackKey;
                     table.MsgID = msg.MsgID;

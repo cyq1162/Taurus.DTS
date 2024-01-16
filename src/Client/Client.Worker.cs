@@ -8,8 +8,9 @@ namespace Taurus.Plugin.DistributedTask
         {
             internal static partial class Worker
             {
-                public static bool Add(TaskTable table)
+                public static bool Save(TaskTable table,out bool isWriteTxt)
                 {
+                    isWriteTxt = false;
                     bool result = false;
                     if (!string.IsNullOrEmpty(DTSConfig.Client.Conn) && table.Insert(InsertOp.None))
                     {
@@ -19,16 +20,15 @@ namespace Taurus.Plugin.DistributedTask
                     }
                     if (!result)
                     {
-                        result = IO.Write(table);//写 DB => Redis、MemCache，失败则写文本。
-                    }
-                    if (result)
-                    {
-                        MQPublisher.Add(table.ToMQMsg());//异步发送MQ
-                        Scanner.Start();//检测未启动则启动，已启动则忽略。
+                        result = IO.Write(table, out isWriteTxt);//写 DB => Redis、MemCache，失败则写文本。
                     }
                     return result;
                 }
-
+                public static void Start(MQMsg msg)
+                {
+                    MQPublisher.Add(msg);//异步发送MQ
+                    Scanner.Start();//检测未启动则启动，已启动则忽略。
+                }
             }
 
 

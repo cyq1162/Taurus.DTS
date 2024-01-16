@@ -20,7 +20,8 @@ namespace Taurus.Plugin.DistributedTask
             {
                 Log.Print("MQ.OnReceived : " + msg.ToJson());
                 bool isFirstAck = !msg.IsFirstAck.HasValue || msg.IsFirstAck.Value;
-                DTSConsole.WriteDebugLine("Client.MQ.OnReceived : " + msg.MsgID + " - " + msg.TaskType + (isFirstAck ? " - IsFirstAck = true" : ""));
+                DTSConsole.WriteDebugLine("--------------------------"+ DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss:fff") + "-------------------------");
+                DTSConsole.WriteDebugLine("Client.MQ.OnReceived : " + msg.MsgID + " - " + msg.TaskType + (isFirstAck ? " - FirstAck" : "") + " - NextTo :" + msg.QueueName);
 
                 var localLock = DistributedLock.Local;
                 string key = "DTS.Client." + msg.MsgID;
@@ -63,8 +64,8 @@ namespace Taurus.Plugin.DistributedTask
                         {
                             return;
                         }
-                        Log.Print("Execute." + msg.TaskType + ".CallBack.Method : " + Client.Cron.StopCronTask);
-                        DTSConsole.WriteDebugLine("Client.Execute." + msg.TaskType + ".CallBack.Method : " + Client.Cron.StopCronTask);
+                        Log.Print("Execute." + msg.TaskType + ".Method : " + Client.Cron.StopCronTask + " - CallBackKey :" + msg.CallBackKey);
+                        DTSConsole.WriteDebugLine("Client.Execute." + msg.TaskType + ".Method : " + Client.Cron.StopCronTask + " - CallBackKey :" + msg.CallBackKey);
                         Worker.MQPublisher.Add(msg.SetFirstAsk());
                         return;
 
@@ -80,8 +81,8 @@ namespace Taurus.Plugin.DistributedTask
                                 object obj = method.IsStatic ? null : Activator.CreateInstance(method.DeclaringType);
                                 object invokeResult = method.Invoke(obj, new object[] { para });
                                 if (invokeResult is bool && !(bool)invokeResult) { return; }
-                                Log.Print("Execute." + msg.TaskType + ".CallBack.Method : " + method.Name);
-                                DTSConsole.WriteDebugLine("Client.Execute." + msg.TaskType + ".CallBack.Method : " + method.Name);
+                                Log.Print("Execute." + msg.TaskType + ".Method : " + method.Name + " - CallBackKey :" + msg.CallBackKey);
+                                DTSConsole.WriteDebugLine("Client.Execute." + msg.TaskType + ".Method : " + method.Name + " - CallBackKey :" + msg.CallBackKey);
                             }
                             catch (Exception err)
                             {
@@ -122,7 +123,7 @@ namespace Taurus.Plugin.DistributedTask
                     //DTCLog.WriteDebugLine("Client.OnDoTask IsDeleteAck=true，让服务端确认及删除掉缓存。");
                 }
                 //打印分隔线，以便查看
-                DTSConsole.WriteDebugLine("----------------------------------------------------------------");
+                DTSConsole.WriteDebugLine("--------------------------" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss:fff") + "-------------------------");
             }
 
             #endregion

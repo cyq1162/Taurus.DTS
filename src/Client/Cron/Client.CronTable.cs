@@ -98,6 +98,22 @@ namespace Taurus.Plugin.DistributedTask
                     get { return _Content; }
                     set { _Content = value; }
                 }
+                private bool? _IsDelayTask;
+                /// <summary>
+                /// 是否由延时任务创建
+                /// </summary>
+                [DefaultValue(0)]
+                public bool? IsDelayTask
+                {
+                    get
+                    {
+                        return _IsDelayTask;
+                    }
+                    set
+                    {
+                        _IsDelayTask = value;
+                    }
+                }
 
                 private int? _ConfirmNum;
                 /// <summary>
@@ -161,7 +177,10 @@ namespace Taurus.Plugin.DistributedTask
                         js.Add("ID", this.ID.Value);
                     }
                     js.Add("MsgID", this.MsgID);
-
+                    if (this.Cron != null)
+                    {
+                        js.Add("Cron", this.Cron);
+                    }
                     if (this.Content != null)
                     {
                         js.Add("Content", this.Content);
@@ -174,7 +193,10 @@ namespace Taurus.Plugin.DistributedTask
                     {
                         js.Add("CallBackKey", this.CallBackKey);
                     }
-
+                    if (this.IsDelayTask.HasValue)
+                    {
+                        js.Add("IsDelayTask", this.IsDelayTask.Value);
+                    }
                     if (this.CreateTime.HasValue)
                     {
                         js.Add("CreateTime", this.CreateTime.Value);

@@ -4,7 +4,6 @@ using CYQ.Data.Tool;
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using System.Xml.Linq;
 
 namespace Taurus.Plugin.DistributedTask
 {
@@ -117,7 +116,7 @@ namespace Taurus.Plugin.DistributedTask
                     {
                         producer.ProduceAsync(msg.QueueName, data);
                     }
-                    producer.Flush();
+                    producer.Flush(TimeSpan.FromSeconds(10));
                 }
                 return true;
             }
@@ -159,7 +158,7 @@ namespace Taurus.Plugin.DistributedTask
                             producer.Produce(msg.QueueName, data);
                         }
                     }
-                    producer.Flush();
+                    producer.Flush(TimeSpan.FromSeconds(10));
                 }
                 return true;
             }
@@ -170,7 +169,7 @@ namespace Taurus.Plugin.DistributedTask
             }
         }
 
-        public override bool Listen(string group, OnReceivedDelegate onReceivedDelegate, string topic, bool isBroadcast)
+        public override bool Listen(string topic, OnReceivedDelegate onReceivedDelegate, string group, bool isBroadcast)
         {
             if (string.IsNullOrEmpty(topic) || onReceivedDelegate == null)
             {
@@ -212,7 +211,7 @@ namespace Taurus.Plugin.DistributedTask
                     BootstrapServers = servers,
                     GroupId = para.Group,
                     EnableAutoCommit = true,
-                    AutoOffsetReset = AutoOffsetReset.Earliest
+                    AutoOffsetReset = para.IsBroadcast ? AutoOffsetReset.Latest : AutoOffsetReset.Earliest
                 };
                 using (var consumer = new ConsumerBuilder<Ignore, string>(config).Build())
                 {
@@ -329,7 +328,7 @@ namespace Taurus.Plugin.DistributedTask
             {
                 foreach (var topic in Topics)
                 {
-                    if (topic.EndsWith(exName))
+                    if (topic.StartsWith(exName))
                     {
                         topicList.Add(topic);
                     }
@@ -352,27 +351,34 @@ namespace Taurus.Plugin.DistributedTask
                 };
                 using (var adminClient = new AdminClientBuilder(config).Build())
                 {
-                    var metadata = adminClient.GetMetadata(topic, TimeSpan.FromSeconds(10));
-                    if (metadata.Topics[0].Error.IsError)
+                    // 创建主题
+                    var topicSpecification = new TopicSpecification
                     {
-                        // 创建主题
-                        var topicSpecification = new TopicSpecification
-                        {
-                            Name = topic,
-                            NumPartitions = 1,
-                            ReplicationFactor = 1
-                        };
-                        adminClient.CreateTopicsAsync(new[] { topicSpecification }).GetAwaiter().GetResult();
-                        if (!topics.Contains(topic))
-                        {
-                            topics.Add(topic);
-                        }
+                        Name = topic,
+                        NumPartitions = 1,
+                        ReplicationFactor = 1
+                    };
+                    adminClient.CreateTopicsAsync(new[] { topicSpecification }).GetAwaiter().GetResult();
+                    //发一条广播，通知大伙，我上线了。
+
+                    if (!topics.Contains(topic))
+                    {
+                        topics.Add(topic);
                     }
+
                 }
                 return true;
             }
             catch (Exception err)
             {
+                if (err.Message.Contains("already exists."))
+                {
+                    if (!topics.Contains(topic))
+                    {
+                        topics.Add(topic);
+                    }
+                    return true;
+                }
                 CYQ.Data.Log.Write(err, "MQ.Kafka");
                 return false;
             }

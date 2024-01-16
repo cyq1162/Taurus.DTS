@@ -280,13 +280,15 @@ namespace Taurus.Plugin.DistributedTask
                                 {
                                     continue;//在一个扫描间隔时间内的不触发重试
                                 }
-                                table.ExChange = DTSConfig.Server.MQ.ProjectExChange;
-                                table.CallBackName = DTSConfig.Client.MQ.ProcessQueue;
+                               
                                 table.DelayMinutes = 0;
                                 table.Retries += 1;
                                 table.EditTime = DateTime.Now;
                                 IO.Write(table);
-                                msgList.Add(table.ToMQMsg());
+                                MQMsg msg=table.ToMQMsg();
+                                msg.ExChange = DTSConfig.Server.MQ.ProjectExChange;
+                                msg.CallBackName = DTSConfig.Client.MQ.ProcessQueue;
+                                msgList.Add(msg);
 
                             }
 

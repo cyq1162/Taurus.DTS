@@ -92,12 +92,25 @@ namespace Taurus.Plugin.DistributedTask
                         var mq = MQ.Client;
                         if (mq.MQType != MQType.Empty)
                         {
-                            //对默认对列绑定交换机。
-                            bool isOK = MQ.Client.Listen(DTSConfig.Client.MQ.ProjectQueue, Client.OnReceived, DTSConfig.Client.MQ.ProjectExChange, false);
-                            DTSConsole.WriteDebugLine("DTS.Client." + mq.MQType + ".Listen : " + DTSConfig.Client.MQ.ProjectQueue + (isOK ? " - OK." : " - Fail."));
+                            if (mq.MQType == MQType.Rabbit)
+                            {
+                                //对默认对列绑定交换机。
+                                bool isOK = MQ.Client.Listen(DTSConfig.Client.MQ.ProjectQueue, Client.OnReceived, DTSConfig.Client.MQ.ProjectExChange, false);
+                                DTSConsole.WriteDebugLine("DTS.Client." + mq.MQType + ".Listen : " + DTSConfig.Client.MQ.ProjectQueue + " - ExChange : " + DTSConfig.Client.MQ.ProjectExChange + (isOK ? " - OK." : " - Fail."));
 
-                            isOK = MQ.Client.Listen(DTSConfig.Client.MQ.ProcessQueue, Client.OnReceived, DTSConfig.Client.MQ.ProcessExChange, true);
-                            DTSConsole.WriteDebugLine("DTS.Client." + mq.MQType + ".Listen : " + DTSConfig.Client.MQ.ProcessQueue + (isOK ? " - OK." : " - Fail."));
+                                isOK = MQ.Client.Listen(DTSConfig.Client.MQ.ProcessQueue, Client.OnReceived, DTSConfig.Client.MQ.ProcessExChange, true);
+                                DTSConsole.WriteDebugLine("DTS.Client." + mq.MQType + ".Listen : " + DTSConfig.Client.MQ.ProcessQueue + " - ExChange : " + DTSConfig.Client.MQ.ProcessExChange + (isOK ? " - OK." : " - Fail."));
+                            }
+                            if (mq.MQType == MQType.Kafka)
+                            {
+                                // 项目队列，只能有一个项目组消费
+                                bool isOK = MQ.Client.Listen(DTSConfig.Client.MQ.ProjectTopic, Client.OnReceived, DTSConfig.Client.MQ.ProjectGroup, false);
+                                DTSConsole.WriteDebugLine("DTS.Client." + mq.MQType + ".Listen : " + DTSConfig.Client.MQ.ProjectTopic + " -  Group : " + DTSConfig.Client.MQ.ProjectGroup + (isOK ? " - OK." : " - Fail."));
+
+                                // 进程队列，可以有多个进程组消费
+                                isOK = MQ.Client.Listen(DTSConfig.Client.MQ.ProcessTopic, Client.OnReceived, DTSConfig.Client.MQ.ProcessGroup, true);
+                                DTSConsole.WriteDebugLine("DTS.Client." + mq.MQType + ".Listen : " + DTSConfig.Client.MQ.ProcessTopic + " -  Group : " + DTSConfig.Client.MQ.ProcessGroup + (isOK ? " - OK." : " - Fail."));
+                            }
                         }
                     }
                 }

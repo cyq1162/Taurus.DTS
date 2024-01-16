@@ -76,11 +76,11 @@ namespace Taurus.Plugin.DistributedTask
         /// <summary>
         /// 监听队列
         /// </summary>
-        /// <param name="queueOrGroup">Rabbit：队列名；Kafka：监听组名</param>
-        /// <param name="exNameOrTopic">Rabbit：交换机；Kafka：主题名称</param>
+        /// <param name="queueOrTopic">Rabbit：队列名；Kafka：主题名称</param>
+        /// <param name="exNameOrGroup">Rabbit：交换机；Kafka：监听组名</param>
         /// <param name="isAutoDelete">Rabbit：是否临时队列，应用关闭时自动删除队列；Rabbit：此参数无效。</param>
         /// <returns></returns>
-        public abstract bool Listen(string queueOrGroup, OnReceivedDelegate onReceivedDelegate, string exNameOrTopic, bool isAutoDelete);
+        public abstract bool Listen(string queueOrTopic, OnReceivedDelegate onReceivedDelegate, string exNameOrGroup, bool isAutoDelete);
 
     }
 

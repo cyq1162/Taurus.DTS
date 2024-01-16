@@ -41,9 +41,9 @@ namespace Taurus.Plugin.DistributedTask
                 /// 内部使用：由 Cron 产生的即时任务。
                 /// </summary>
                 /// <returns></returns>
-                internal static bool PublishAsync(string content, string taskKey, string callBackKey, string recurringID)
+                internal static bool PublishAsync(TaskType taskType, string content, string taskKey, string callBackKey, string recurringID)
                 {
-                    return ExeTaskAsync(TaskType.Cron, content, taskKey, callBackKey, 0, recurringID, BroadcastType.None);
+                    return ExeTaskAsync(taskType, content, taskKey, callBackKey, 0, recurringID, BroadcastType.None);
                 }
             }
 
@@ -71,7 +71,13 @@ namespace Taurus.Plugin.DistributedTask
                 /// <param name="callBackKey">如果需要接收回调通知，指定本回调key，回调方法用 DTSClientCallBack 特性标注</param>
                 public static bool PublishAsync(int delayMinutes, string content, string taskKey, string callBackKey)
                 {
-                    return ExeTaskAsync(TaskType.Delay, content, taskKey, callBackKey, delayMinutes, null, BroadcastType.None);
+                    if (MQ.Client.MQType == MQType.Rabbit)
+                    {
+                        return ExeTaskAsync(TaskType.Delay, content, taskKey, callBackKey, delayMinutes, null, BroadcastType.None);
+                    }
+                    //生成 Cron 表达式，走定时任务
+                    string cron = CronHelper.GetCron(DateTime.Now.AddMinutes(delayMinutes));
+                    return Cron.PublishAsync(cron, content, taskKey, callBackKey, true);
                 }
             }
 
@@ -89,7 +95,7 @@ namespace Taurus.Plugin.DistributedTask
                 /// <param name="taskKey">指定任务key，即Server方监听的subKey</param>
                 public static bool PublishAsync(string cron, string content, string taskKey)
                 {
-                    return PublishAsync(cron, content, taskKey, null);
+                    return PublishAsync(cron, content, taskKey, null, false);
                 }
                 /// <summary>
                 /// 发起一个重复性任务，相同 ProjectName 竞争同一个信息。
@@ -100,6 +106,10 @@ namespace Taurus.Plugin.DistributedTask
                 /// <param name="callBackKey">如果需要接收回调通知，指定本回调key，回调方法用 DTSClientCallBack 特性标注</param>
                 public static bool PublishAsync(string cron, string content, string taskKey, string callBackKey)
                 {
+                    return PublishAsync(cron, content, taskKey, callBackKey, false);
+                }
+                internal static bool PublishAsync(string cron, string content, string taskKey, string callBackKey, bool isDelayTask)
+                {
                     if (CronHelper.GetNextDateTime(cron) == null)
                     {
                         throw new Exception("Invalid cron expression.");
@@ -109,6 +119,7 @@ namespace Taurus.Plugin.DistributedTask
                     table.Content = content;
                     table.TaskKey = taskKey;
                     table.CallBackKey = callBackKey;
+                    table.IsDelayTask = isDelayTask;
                     table.CreateTime = DateTime.Now;
                     table.EditTime = DateTime.Now;
 
@@ -184,6 +195,8 @@ namespace Taurus.Plugin.DistributedTask
             /// </summary>
             private static bool ExeTaskAsync(TaskType taskType, string content, string taskKey, string callBackKey, int delayMinutes, string recurringID, BroadcastType broadcastType)
             {
+                MQType mqType = MQ.Client.MQType;
+                if (mqType == MQType.Empty) { throw new Exception("MQ can't be empty , you need a mq config."); }
 
                 TaskTable table = new TaskTable();
                 table.TaskType = taskType.ToString();
@@ -196,32 +209,8 @@ namespace Taurus.Plugin.DistributedTask
                 {
                     table.MsgID = recurringID;
                 }
-
-
-                if (taskType == TaskType.Broadcast)
-                {
-                    switch (broadcastType)
-                    {
-                        case BroadcastType.Client:
-                            table.ExChange = DTSConfig.Client.MQ.ProcessExChange;
-                            break;
-                        case BroadcastType.Server:
-                        default:
-                            table.ExChange = DTSConfig.Server.MQ.ProcessExChange;
-                            break;
-                    }
-
-                }
-                else
-                {
-                    table.ExChange = DTSConfig.Server.MQ.ProjectExChange;
-                }
-                table.CallBackName = DTSConfig.Client.MQ.ProcessQueue;
                 if (delayMinutes > 0)
                 {
-                    table.ExChange = DTSConfig.Server.MQ.ProjectExChange;
-                    table.QueueName = DTSConfig.Client.MQ.DelayQueue + "_" + delayMinutes;//延时队列超时，转移到默认交换机
-
                     table.CreateTime = DateTime.Now.AddMinutes(delayMinutes);//Scanner 任务移除超时数据，根据此时间处理。
                     table.EditTime = DateTime.Now.AddMinutes(delayMinutes);//Scanner 处理任务重试，根据此时间处理。
                 }
@@ -230,7 +219,45 @@ namespace Taurus.Plugin.DistributedTask
                     table.EditTime = DateTime.Now;
                     table.CreateTime = DateTime.Now;
                 }
-                return Worker.Add(table);
+                bool isWriteTxt = false;
+                if (!Worker.Save(table, out isWriteTxt))
+                {
+                    return false;
+                }
+                MQMsg msg = table.ToMQMsg();
+                switch (taskType)
+                {
+                    case TaskType.Broadcast:
+                        switch (broadcastType)
+                        {
+                            case BroadcastType.Client:
+                                msg.ExChange = DTSConfig.Client.MQ.ProcessExChange;
+                                break;
+                            case BroadcastType.Server:
+                                msg.ExChange = DTSConfig.Server.MQ.ProcessExChange;
+                                break;
+                        }
+                        break;
+                    default:
+                        msg.ExChange = DTSConfig.Server.MQ.ProjectExChange;
+                        break;
+                }
+
+                if (mqType == MQType.Rabbit)
+                {
+                    if (delayMinutes > 0)
+                    {
+                        msg.ExChange = DTSConfig.Server.MQ.ProjectExChange;
+                        msg.QueueName = DTSConfig.Client.MQ.DelayQueue + "_" + delayMinutes;//延时队列超时，转移到默认交换机
+                    }
+                    msg.CallBackName = DTSConfig.Client.MQ.ProcessQueue;
+                }
+                else if (mqType == MQType.Kafka)
+                {
+                    msg.CallBackName = isWriteTxt ? DTSConfig.Client.MQ.ProcessTopic : DTSConfig.Client.MQ.ProjectTopic;
+                }
+                Worker.Start(msg);
+                return true;
             }
         }
     }

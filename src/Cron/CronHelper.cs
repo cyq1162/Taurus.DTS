@@ -14,6 +14,16 @@ namespace Taurus.Plugin.DistributedTask
     internal class CronHelper
     {
         /// <summary>
+        /// 根据时间生成执行1次的 Cron 表达式
+        /// </summary>
+        /// <param name="dt"></param>
+        /// <returns></returns>
+        public static string GetCron(DateTime dt)
+        {
+            return string.Format("{0} {1} {2} {3} {4} ? {5}", dt.Second, dt.Minute, dt.Hour, dt.Day, dt.Month, dt.Year);
+        }
+
+        /// <summary>
         /// Cron表达式转换(默认开始时间为当前)
         /// </summary>
         /// <param name="cron">表达式</param>
@@ -21,73 +31,7 @@ namespace Taurus.Plugin.DistributedTask
         /// <returns>最近N次要执行的时间</returns>
         public static List<DateTime> GetExeTimeList(string cron, int count)
         {
-            if (string.IsNullOrEmpty(cron)) { return null; }
-            try
-            {
-                List<DateTime> lits = new List<DateTime>();
-                Cron c = new Cron();
-                string[] arr = cron.Split(' ');
-                Seconds(c, arr[0]);
-                Minutes(c, arr[1]);
-                Hours(c, arr[2]);
-                Month(c, arr[4]);
-                if (arr.Length < 7)
-                {
-                    Year(c, null);
-                }
-                else
-                {
-                    Year(c, arr[6]);
-                }
-                DateTime now = DateTime.Now;
-                int addtime = 1;
-                while (true)
-                {
-                    if (c.Seconds[now.Second] == 1 && c.Minutes[now.Minute] == 1 && c.Hours[now.Hour] == 1 && c.Month[now.Month - 1] == 1 && c.Year[now.Year - 2019] == 1)
-                    {
-                        if (arr[3] != "?")
-                        {
-                            Days(c, arr[3], DateTime.DaysInMonth(now.Year, now.Month), now);
-                            int DayOfWeek = (((int)now.DayOfWeek) + 6) % 7;
-                            if (c.Days[now.Day - 1] == 1 && c.Weeks[DayOfWeek] == 1)
-                            {
-                                lits.Add(now);
-                            }
-                        }
-                        else
-                        {
-                            Weeks(c, arr[5], DateTime.DaysInMonth(now.Year, now.Month), now);
-                            int DayOfWeek = (((int)now.DayOfWeek) + 6) % 7;
-                            if (c.Days[now.Day - 1] == 1 && c.Weeks[DayOfWeek] == 1)
-                            {
-                                lits.Add(now);
-                            }
-                        }
-                    }
-                    if (lits.Count >= count)
-                    {
-                        break;
-                    }
-                    c.Init();
-                    if (!arr[1].Contains("-") && !arr[1].Contains(",") && !arr[1].Contains("*") && !arr[1].Contains("/"))
-                    {
-                        if (now.Minute == int.Parse(arr[1]))
-                        {
-                            addtime = 3600;
-                        }
-                    }
-                    else if (arr[0] == "0" && now.Second == 0)
-                    {
-                        addtime = 60;
-                    }
-                    now = now.AddSeconds(addtime);
-                }
-                return lits;
-            }
-            catch
-            {
-                return null;
-            }
+            return GetExeTimeList(cron, DateTime.Now, count);
         }
 
         /// <summary>
@@ -174,79 +118,7 @@ namespace Taurus.Plugin.DistributedTask
         /// <returns>最近要执行的时间字符串</returns>
         public static string GetNextDateTime(string cron)
         {
-            if (string.IsNullOrEmpty(cron)) { return null; }
-            try
-            {
-                DateTime now = DateTime.Now;
-                string[] arr = cron.Split(' ');
-                if (IsOrNoOne(cron))
-                {
-                    string date = arr[6] + "/" + arr[4] + "/" + arr[3] + " " + arr[2] + ":" + arr[1] + ":" + arr[0];
-                    if (DateTime.Compare(Convert.ToDateTime(date), now) >= 0)
-                    {
-                        return date;
-                    }
-                    else
-                    {
-                        return null;
-                    }
-                }
-                Cron c = new Cron();
-                Seconds(c, arr[0]);
-                Minutes(c, arr[1]);
-                Hours(c, arr[2]);
-                Month(c, arr[4]);
-                if (arr.Length < 7)
-                {
-                    Year(c, null);
-                }
-                else
-                {
-                    Year(c, arr[6]);
-                }
-                int addtime = 1;
-                while (true)
-                {
-                    if (c.Seconds[now.Second] == 1 && c.Minutes[now.Minute] == 1 && c.Hours[now.Hour] == 1 && c.Month[now.Month - 1] == 1 && c.Year[now.Year - 2019] == 1)
-                    {
-                        if (arr[3] != "?")
-                        {
-                            Days(c, arr[3], DateTime.DaysInMonth(now.Year, now.Month), now);
-                            int DayOfWeek = (((int)now.DayOfWeek) + 6) % 7;
-                            if (c.Days[now.Day - 1] == 1 && c.Weeks[DayOfWeek] == 1)
-                            {
-                                return now.ToString("yyyy/MM/dd HH:mm:ss");
-                            }
-                        }
-                        else
-                        {
-                            Weeks(c, arr[5], DateTime.DaysInMonth(now.Year, now.Month), now);
-                            int DayOfWeek = (((int)now.DayOfWeek) + 6) % 7;
-                            if (c.Days[now.Day - 1] == 1 && c.Weeks[DayOfWeek] == 1)
-                            {
-                                return now.ToString("yyyy/MM/dd HH:mm:ss");
-                            }
-                        }
-                    }
-                    c.Init();
-                    if (!arr[1].Contains("-") && !arr[1].Contains(",") && !arr[1].Contains("*") && !arr[1].Contains("/"))
-                    {
-                        if (now.Minute == int.Parse(arr[1]))
-                        {
-                            addtime = 3600;
-                        }
-                    }
-                    else if (arr[0] == "0" && now.Second == 0)
-                    {
-                        addtime = 60;
-                    }
-                    now = now.AddSeconds(addtime);
-                }
-            }
-            catch
-            {
-                return null;
-            }
+            return GetNextDateTime(cron, DateTime.Now);
         }
 
         /// <summary>
@@ -261,12 +133,12 @@ namespace Taurus.Plugin.DistributedTask
             try
             {
                 string[] arr = cron.Split(' ');
-                if (IsOrNoOne(cron))
+                if (IsExeOnce(cron))
                 {
-                    string date = arr[6] + "/" + arr[4] + "/" + arr[3] + " " + arr[2] + ":" + arr[1] + ":" + arr[0];
-                    if (DateTime.Compare(Convert.ToDateTime(date), now) > 0)
+                    DateTime date = Convert.ToDateTime(arr[6] + "/" + arr[4] + "/" + arr[3] + " " + arr[2] + ":" + arr[1] + ":" + arr[0] + ".999");
+                    if (DateTime.Compare(date, now) >= 0)
                     {
-                        return date;
+                        return date.ToString("yyyy/MM/dd HH:mm:ss");
                     }
                     else
                     {
@@ -752,7 +624,7 @@ namespace Taurus.Plugin.DistributedTask
 
         #region 方法
 
-        private static bool IsOrNoOne(string cron)
+        private static bool IsExeOnce(string cron)
         {
             if (cron.Contains("-") || cron.Contains(",") || cron.Contains("/") || cron.Contains("*"))
             {
