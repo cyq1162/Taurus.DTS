@@ -191,7 +191,7 @@ namespace Taurus.Plugin.DistributedTask
                         channel.QueueBind(queueName, items[0], "");
 
                         if (items.Length > 1)
-                        { 
+                        {
                             //定义交换机
                             channel.ExchangeDeclare(items[1], "fanout");
 
@@ -213,7 +213,7 @@ namespace Taurus.Plugin.DistributedTask
                         string subKey = msg.TaskKey;
                         msg.TaskKey = msg.CallBackKey;
                         msg.CallBackKey = subKey;
-
+                        msg.ExChange = null;//关闭交换机。
                         onReceivedDelegate(msg);
                     };
                     channel.BasicConsume(queueName, true, consumer);
@@ -261,8 +261,14 @@ namespace Taurus.Plugin.DistributedTask
                             channel.QueueDeclare(msg.QueueName, true, false, false, arguments: arg);//允许丢失，不需要持久化。
                             declareQueueNames.Add(msg.QueueName);
                         }
-
-                        channel.BasicPublish("", msg.QueueName, null, body: bytes);
+                        IBasicProperties basic = null;
+                        if (!string.IsNullOrEmpty(msg.ExChange))
+                        {
+                            basic = channel.CreateBasicProperties();
+                            basic.ReplyTo = msg.ExChange;
+                            channel.BasicReturn += Channel_BasicReturn;
+                        }
+                        channel.BasicPublish("", msg.QueueName, true, basic, body: bytes);
                     }
                     else
                     {
@@ -276,6 +282,36 @@ namespace Taurus.Plugin.DistributedTask
                 Log.Write(err, "MQ.Rabbit");
                 return false;
             }
+        }
+
+        private void Channel_BasicReturn(object sender, BasicReturnEventArgs e)
+        {
+            try
+            {
+                if (_IsConnectOK)
+                {
+                    if (e.BasicProperties != null && !string.IsNullOrEmpty(e.BasicProperties.ReplyTo))
+                    {
+                        var channel = sender as IModel;
+                        bool isCreate = false;
+                        if (channel == null || !channel.IsOpen)
+                        {
+                            channel = DefaultConnection.CreateModel();
+                            isCreate = true;
+                        }
+                        if (channel != null)
+                        {
+                            channel.BasicPublish(e.BasicProperties.ReplyTo, "", false, null, e.Body);
+                            if (isCreate) { channel.Close(); }
+                        }
+                    }
+                }
+            }
+            catch (Exception err)
+            {
+                Log.Write(err, "MQ.Rabbit");
+            }
+
         }
     }
 }

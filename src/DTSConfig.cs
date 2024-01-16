@@ -97,25 +97,25 @@ namespace Taurus.Plugin.DistributedTask
         }
 
 
-        /// <summary>
-        /// Both：项目交换机：绑定所有项目队列
-        /// </summary>
-        internal static string ProjectExChange
-        {
-            get
-            {
-                return "DTS_Both_Project";
-            }
-        }
-        /// <summary>
-        /// Both：进程交换机：绑定所有进程队列
-        /// </summary>
-        internal static string ProcessExChange
-        {
-            get
-            {
-                return "DTS_Both_Process";
-            }
-        }
+        ///// <summary>
+        ///// Both：项目交换机：绑定所有项目队列
+        ///// </summary>
+        //internal static string ProjectExChange
+        //{
+        //    get
+        //    {
+        //        return "DTS_Both_Project";
+        //    }
+        //}
+        ///// <summary>
+        ///// Both：进程交换机：绑定所有进程队列
+        ///// </summary>
+        //internal static string ProcessExChange
+        //{
+        //    get
+        //    {
+        //        return "DTS_Both_Process";
+        //    }
+        //}
     }
 }

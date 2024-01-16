@@ -73,7 +73,14 @@ namespace Taurus.Plugin.DistributedTask
         public abstract MQType MQType { get; }
         public abstract bool Publish(MQMsg msg);
         public abstract bool PublishBatch(List<MQMsg> msgList);
-        public abstract bool Listen(string queueNameOrGroupName, OnReceivedDelegate onReceivedDelegate, string bindExNameOrTopicName, bool isAutoDelete);
+        /// <summary>
+        /// 监听队列
+        /// </summary>
+        /// <param name="queueOrGroup">Rabbit：队列名；Kafka：监听组名</param>
+        /// <param name="exNameOrTopic">Rabbit：交换机；Kafka：主题名称</param>
+        /// <param name="isAutoDelete">Rabbit：是否临时队列，应用关闭时自动删除队列；Rabbit：此参数无效。</param>
+        /// <returns></returns>
+        public abstract bool Listen(string queueOrGroup, OnReceivedDelegate onReceivedDelegate, string exNameOrTopic, bool isAutoDelete);
 
     }
 

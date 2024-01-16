@@ -4,10 +4,10 @@ using System.Data;
 namespace Taurus.Plugin.DistributedTask
 {
     /// <summary>
-    /// 用于分布式事务服务端【即提供端】回调订阅，SubKey 区分大小写。
+    /// 用于分布式任务服务端【即提供端】订阅任务，SubKey 区分大小写。
     /// </summary>
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = true, Inherited = true)]
-    public class DTSServerSubscribeAttribute : Attribute
+    public class DTSSubscribeAttribute : Attribute
     {
         /// <summary>
         /// 获取设置的监听名称。
@@ -18,7 +18,7 @@ namespace Taurus.Plugin.DistributedTask
         /// 用于分布式事务回调订阅。
         /// </summary>
         /// <param name="subKey">监听的名称</param>
-        public DTSServerSubscribeAttribute(string subKey)
+        public DTSSubscribeAttribute(string subKey)
         {
             this.SubKey = subKey;
         }

@@ -60,8 +60,8 @@ namespace Taurus.Plugin.DistributedTask
                                     {
                                         if (MQ.Server.PublishBatch(mQMsgs))
                                         {
-                                            Log.Print("MQ.Publish : " + mQMsgs.Count + " items.");
-                                            DTSConsole.WriteDebugLine("Server.MQ.Publish : " + mQMsgs.Count + " items.");
+                                            Log.Print("MQ.PublishBatch : " + mQMsgs.Count + " items.");
+                                            DTSConsole.WriteDebugLine("Server.MQ.PublishBatch : " + mQMsgs.Count + " items.");
                                         }
                                         mQMsgs.Clear();
                                     }
@@ -92,11 +92,11 @@ namespace Taurus.Plugin.DistributedTask
                         if (mq.MQType != MQType.Empty)
                         {
                             //对默认对列绑定交换机。
-                            bool isOK = MQ.Server.Listen(DTSConfig.Server.MQ.ProjectQueue, Server.OnReceived, DTSConfig.Server.MQ.ProjectExChange + "," + DTSConfig.ProjectExChange, false);
+                            bool isOK = MQ.Server.Listen(DTSConfig.Server.MQ.ProjectQueue, Server.OnReceived, DTSConfig.Server.MQ.ProjectExChange, false);
                             DTSConsole.WriteDebugLine("DTS.Server." + mq.MQType + ".Listen : " + DTSConfig.Server.MQ.ProjectQueue + (isOK ? " - OK." : " - Fail."));
 
 
-                            isOK = MQ.Server.Listen(DTSConfig.Server.MQ.ProcessQueue, Server.OnReceived, DTSConfig.Server.MQ.ProcessExChange + "," + DTSConfig.ProcessExChange, true);
+                            isOK = MQ.Server.Listen(DTSConfig.Server.MQ.ProcessQueue, Server.OnReceived, DTSConfig.Server.MQ.ProcessExChange, true);
                             DTSConsole.WriteDebugLine("DTS.Server." + mq.MQType + ".Listen : " + DTSConfig.Server.MQ.ProcessQueue + (isOK ? " - OK." : " - Fail."));
 
                         }

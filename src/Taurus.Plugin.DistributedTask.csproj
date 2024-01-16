@@ -9,7 +9,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Taurus.Plugin.DistributedTask</RootNamespace>
-    <AssemblyName>Taurus.Plugin.DistributedTask</AssemblyName>
+    <AssemblyName>Taurus.DTS</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
@@ -35,6 +35,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
+    <DocumentationFile>bin\Release\Taurus.DTS.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Confluent.Kafka, Version=1.8.2.0, Culture=neutral, PublicKeyToken=12c514ca49093d1e, processorArchitecture=MSIL">
@@ -61,10 +62,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Attribute\DTSClientCallBackAttribute.cs" />
-    <Compile Include="Attribute\DTSClientCallBackPara.cs" />
-    <Compile Include="Attribute\DTSServerSubscribeAttribute.cs" />
-    <Compile Include="Attribute\DTSServerSubscribePara.cs" />
+    <Compile Include="Attribute\DTSCallBackAttribute.cs" />
+    <Compile Include="Attribute\DTSCallBackPara.cs" />
+    <Compile Include="Attribute\DTSSubscribeAttribute.cs" />
+    <Compile Include="Attribute\DTSSubscribePara.cs" />
     <Compile Include="Client\Client.CallBack.cs" />
     <Compile Include="Client\Client.Config.cs" />
     <Compile Include="Client\Client.Config.MQ.cs" />
@@ -84,6 +85,7 @@
     <Compile Include="DTS.cs" />
     <Compile Include="DTSConfig.cs" />
     <Compile Include="DTSConsole.cs" />
+    <Compile Include="Enum\BroadcastType.cs" />
     <Compile Include="Enum\TableClearMode.cs" />
     <Compile Include="Enum\TaskTypeEnum.cs" />
     <Compile Include="MQ\Kafka\MQ.Kafka.cs" />

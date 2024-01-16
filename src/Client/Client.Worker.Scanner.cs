@@ -293,8 +293,8 @@ namespace Taurus.Plugin.DistributedTask
                             //批量发送
                             if (msgList.Count > 0 && MQ.Client.PublishBatch(msgList))
                             {
-                                Log.Print("ScanIO.MQ.Publish.ToRetryExChange :" + msgList.Count + " items.");
-                                DTSConsole.WriteDebugLine("Client.ScanIO.MQ.Publish.ToRetryExChange :" + msgList.Count + " items.");
+                                Log.Print("ScanIO.MQ.PublishBatch.ToRetryExChange :" + msgList.Count + " items.");
+                                DTSConsole.WriteDebugLine("Client.ScanIO.MQ.PublishBatch.ToRetryExChange :" + msgList.Count + " items.");
                             }
                         }
                     }

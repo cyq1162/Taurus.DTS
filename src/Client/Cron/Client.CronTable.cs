@@ -15,10 +15,7 @@ namespace Taurus.Plugin.DistributedTask
             {
                 public CronTable()
                 {
-                    if (!string.IsNullOrEmpty(DTSConfig.Client.Conn))
-                    {
-                        SetInit(this, DTSConfig.Client.CronTable, DTSConfig.Client.Conn);
-                    }
+                    SetInit(this, DTSConfig.Client.CronTable, DTSConfig.Client.Conn);
                 }
                 private long? _ID;
                 /// <summary>
@@ -164,7 +161,7 @@ namespace Taurus.Plugin.DistributedTask
                         js.Add("ID", this.ID.Value);
                     }
                     js.Add("MsgID", this.MsgID);
-                   
+
                     if (this.Content != null)
                     {
                         js.Add("Content", this.Content);
@@ -177,7 +174,7 @@ namespace Taurus.Plugin.DistributedTask
                     {
                         js.Add("CallBackKey", this.CallBackKey);
                     }
-                 
+
                     if (this.CreateTime.HasValue)
                     {
                         js.Add("CreateTime", this.CreateTime.Value);

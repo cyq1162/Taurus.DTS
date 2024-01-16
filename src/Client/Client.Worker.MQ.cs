@@ -61,8 +61,8 @@ namespace Taurus.Plugin.DistributedTask
                                     {
                                         if (MQ.Client.PublishBatch(mQMsgs))
                                         {
-                                            Log.Print("MQ.Publish : " + mQMsgs.Count + " items.");
-                                            DTSConsole.WriteDebugLine("Client.MQ.Publish : " + mQMsgs.Count + " items.");
+                                            Log.Print("MQ.PublishBatch : " + mQMsgs.Count + " items.");
+                                            DTSConsole.WriteDebugLine("Client.MQ.PublishBatch : " + mQMsgs.Count + " items.");
                                         }
                                         mQMsgs.Clear();
                                     }
@@ -93,10 +93,10 @@ namespace Taurus.Plugin.DistributedTask
                         if (mq.MQType != MQType.Empty)
                         {
                             //对默认对列绑定交换机。
-                            bool isOK = MQ.Client.Listen(DTSConfig.Client.MQ.ProjectQueue, Client.OnReceived, DTSConfig.Client.MQ.ProjectExChange + "," + DTSConfig.ProjectExChange, false);
+                            bool isOK = MQ.Client.Listen(DTSConfig.Client.MQ.ProjectQueue, Client.OnReceived, DTSConfig.Client.MQ.ProjectExChange, false);
                             DTSConsole.WriteDebugLine("DTS.Client." + mq.MQType + ".Listen : " + DTSConfig.Client.MQ.ProjectQueue + (isOK ? " - OK." : " - Fail."));
 
-                            isOK = MQ.Client.Listen(DTSConfig.Client.MQ.ProcessQueue, Client.OnReceived, DTSConfig.Client.MQ.ProcessExChange + "," + DTSConfig.ProcessExChange, true);
+                            isOK = MQ.Client.Listen(DTSConfig.Client.MQ.ProcessQueue, Client.OnReceived, DTSConfig.Client.MQ.ProcessExChange, true);
                             DTSConsole.WriteDebugLine("DTS.Client." + mq.MQType + ".Listen : " + DTSConfig.Client.MQ.ProcessQueue + (isOK ? " - OK." : " - Fail."));
                         }
                     }

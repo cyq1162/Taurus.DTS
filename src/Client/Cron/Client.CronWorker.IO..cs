@@ -82,7 +82,7 @@ namespace Taurus.Plugin.DistributedTask
                         }
                         if (!isOK)
                         {
-                            string path = AppConfig.WebRootPath + "App_Data/dts/client/task/" + CronTableType + "/" + id + ".txt";
+                            string path = AppConfig.WebRootPath + "App_Data/dts/client/" + CronTableType + "/" + id + ".txt";
                             isOK = IOHelper.Delete(path);
                         }
                         return isOK;

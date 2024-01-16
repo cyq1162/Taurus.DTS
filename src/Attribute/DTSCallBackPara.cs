@@ -1,17 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using CYQ.Data.Tool;
+﻿using CYQ.Data.Tool;
 
 namespace Taurus.Plugin.DistributedTask
 {
 
     /// <summary>
-    /// DTCClientCallBack 标注的方法传递参数
+    /// DTSCallBack 标注的方法传递参数
     /// </summary>
-    public class DTSClientCallBackPara
+    public class DTSCallBackPara
     {
-        internal DTSClientCallBackPara(MQMsg msg)
+        internal DTSCallBackPara(MQMsg msg)
         {
             this.MsgID = msg.MsgID;
             this.TaskType = ConvertTool.ChangeType<TaskType>(msg.TaskType);

@@ -206,10 +206,8 @@ namespace Taurus.Plugin.DistributedTask
                             table.ExChange = DTSConfig.Client.MQ.ProcessExChange;
                             break;
                         case BroadcastType.Server:
-                            table.ExChange = DTSConfig.Server.MQ.ProcessExChange;
-                            break;
                         default:
-                            table.ExChange = DTSConfig.ProcessExChange;
+                            table.ExChange = DTSConfig.Server.MQ.ProcessExChange;
                             break;
                     }
 

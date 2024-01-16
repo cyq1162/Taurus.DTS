@@ -140,11 +140,12 @@ namespace Taurus.Plugin.DistributedTask
                                 foreach (MQMsg msg in msgList)
                                 {
                                     msg.SetDeleteAsk();
+                                    msg.ExChange = DTSConfig.Client.MQ.ProcessExChange;//发送不到时候，用广播群发。
                                 }
                                 if (MQ.Client.PublishBatch(msgList))
                                 {
-                                    Log.Print("ScanDB.MQ.Publish :" + msgList.Count + " items.");
-                                    DTSConsole.WriteDebugLine("Server.ScanDB.MQ.Publish :" + msgList.Count + " items.");
+                                    Log.Print("ScanDB.MQ.PublishBatch :" + msgList.Count + " items.");
+                                    DTSConsole.WriteDebugLine("Server.ScanDB.MQ.PublishBatch :" + msgList.Count + " items.");
                                     foreach (var row in dtSend.Rows)
                                     {
                                         row.Set("Retries", row.Get<int>("Retries") + 1, 2);

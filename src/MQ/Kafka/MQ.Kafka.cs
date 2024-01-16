@@ -4,6 +4,7 @@ using CYQ.Data.Tool;
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.Xml.Linq;
 
 namespace Taurus.Plugin.DistributedTask
 {
@@ -169,7 +170,7 @@ namespace Taurus.Plugin.DistributedTask
             }
         }
 
-        public override bool Listen(string topic, OnReceivedDelegate onReceivedDelegate, string exName, bool isBroadcast)
+        public override bool Listen(string group, OnReceivedDelegate onReceivedDelegate, string topic, bool isBroadcast)
         {
             if (string.IsNullOrEmpty(topic) || onReceivedDelegate == null)
             {
@@ -183,7 +184,7 @@ namespace Taurus.Plugin.DistributedTask
             {
                 if (CreateTopicIfNoExists(topic))
                 {
-                    ListenPara para = new ListenPara() { Topic = topic, Event = onReceivedDelegate, IsBroadcast = isBroadcast };
+                    ListenPara para = new ListenPara() { Group = group, Topic = topic, Event = onReceivedDelegate, IsBroadcast = isBroadcast };
                     ThreadPool.QueueUserWorkItem(new WaitCallback(ListenThread), para);
                     return true;
                 }
@@ -209,7 +210,7 @@ namespace Taurus.Plugin.DistributedTask
                 var config = new ConsumerConfig
                 {
                     BootstrapServers = servers,
-                    GroupId = para.Topic,
+                    GroupId = para.Group,
                     EnableAutoCommit = true,
                     AutoOffsetReset = AutoOffsetReset.Earliest
                 };
@@ -255,7 +256,67 @@ namespace Taurus.Plugin.DistributedTask
             string subKey = msg.TaskKey;
             msg.TaskKey = msg.CallBackKey;
             msg.CallBackKey = subKey;
+            msg.ExChange = null;
+
             para.Event(msg);
+        }
+
+        static readonly object lockTopicObj = new object();
+        static List<string> topics = new List<string>();
+        /// <summary>
+        /// 获取所有项目Topics
+        /// </summary>
+        public List<string> Topics
+        {
+            get
+            {
+                if (topics.Count == 0)
+                {
+                    lock (lockTopicObj)
+                    {
+                        if (topics.Count == 0)
+                        {
+                            ReSetTopics(servers);
+                        }
+                    }
+                }
+
+                return topics;
+            }
+        }
+
+        /// <summary>
+        /// 更新【获取所有】主题列表
+        /// </summary>
+        private void ReSetTopics(string servers)
+        {
+            try
+            {
+                var config = new AdminClientConfig
+                {
+                    BootstrapServers = servers // Kafka 服务器地址和端口
+                };
+                Metadata metadata;
+                using (var adminClient = new AdminClientBuilder(config).Build())
+                {
+                    metadata = adminClient.GetMetadata(TimeSpan.FromSeconds(10));
+                }
+                if (metadata != null && metadata.Topics != null)
+                {
+                    topics.Clear();
+                    foreach (var topic in metadata.Topics)
+                    {
+                        if (!topics.Contains(topic.Topic))
+                        {
+                            topics.Add(topic.Topic);
+                        }
+                    }
+                }
+            }
+            catch (Exception err)
+            {
+                CYQ.Data.Log.Write(err, "MQ.Kafka");
+            }
         }
 
         /// <summary>
@@ -266,20 +327,11 @@ namespace Taurus.Plugin.DistributedTask
             List<string> topicList = new List<string>();
             try
             {
-                var config = new AdminClientConfig
+                foreach (var topic in Topics)
                 {
-                    BootstrapServers = servers // Kafka 服务器地址和端口
-                };
-                using (var adminClient = new AdminClientBuilder(config).Build())
-                {
-                    var metadata = adminClient.GetMetadata(TimeSpan.FromSeconds(10));
-
-                    foreach (var topic in metadata.Topics)
+                    if (topic.EndsWith(exName))
                     {
-                        if (topic.Topic.EndsWith(exName))
-                        {
-                            topicList.Add(topic.Topic);
-                        }
+                        topicList.Add(topic);
                     }
                 }
             }
@@ -291,6 +343,7 @@ namespace Taurus.Plugin.DistributedTask
         }
         private bool CreateTopicIfNoExists(string topic)
         {
+            if (Topics.Contains(topic)) { return true; }
             try
             {
                 var config = new AdminClientConfig
@@ -310,6 +363,10 @@ namespace Taurus.Plugin.DistributedTask
                             ReplicationFactor = 1
                         };
                         adminClient.CreateTopicsAsync(new[] { topicSpecification }).GetAwaiter().GetResult();
+                        if (!topics.Contains(topic))
+                        {
+                            topics.Add(topic);
+                        }
                     }
                 }
                 return true;
@@ -324,6 +381,7 @@ namespace Taurus.Plugin.DistributedTask
 
         public class ListenPara
         {
+            public string Group { get; set; }
             public string Topic { get; set; }
             public string Message { get; set; }
             public OnReceivedDelegate Event { get; set; }

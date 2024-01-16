@@ -19,7 +19,9 @@ namespace Taurus.Plugin.DistributedTask
             internal static void OnReceived(MQMsg msg)
             {
                 Log.Print("MQ.OnReceived : " + msg.ToJson());
-                DTSConsole.WriteDebugLine("Client.MQ.OnReceived : " + msg.MsgID + " - " + msg.TaskType);
+                bool isFirstAck = !msg.IsFirstAck.HasValue || msg.IsFirstAck.Value;
+                DTSConsole.WriteDebugLine("Client.MQ.OnReceived : " + msg.MsgID + " - " + msg.TaskType + (isFirstAck ? " - IsFirstAck = true" : ""));
+
                 var localLock = DistributedLock.Local;
                 string key = "DTS.Client." + msg.MsgID;
                 bool isLockOK = false;
@@ -74,7 +76,7 @@ namespace Taurus.Plugin.DistributedTask
                         {
                             try
                             {
-                                DTSClientCallBackPara para = new DTSClientCallBackPara(msg);
+                                DTSCallBackPara para = new DTSCallBackPara(msg);
                                 object obj = method.IsStatic ? null : Activator.CreateInstance(method.DeclaringType);
                                 object invokeResult = method.Invoke(obj, new object[] { para });
                                 if (invokeResult is bool && !(bool)invokeResult) { return; }
@@ -119,6 +121,8 @@ namespace Taurus.Plugin.DistributedTask
                     Worker.MQPublisher.Add(msg.SetDeleteAsk());
                     //DTCLog.WriteDebugLine("Client.OnDoTask IsDeleteAck=true，让服务端确认及删除掉缓存。");
                 }
+                //打印分隔线，以便查看
+                DTSConsole.WriteDebugLine("----------------------------------------------------------------");
             }
 
             #endregion

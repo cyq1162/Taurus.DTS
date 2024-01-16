@@ -49,6 +49,9 @@ namespace Taurus.Plugin.DistributedTask
 
         public bool? IsDeleteAck { get; set; }
 
+        /// <summary>
+        /// 任务创建时间
+        /// </summary>
         public DateTime? TaskTime { get; set; }
 
         /// <summary>

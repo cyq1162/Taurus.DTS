@@ -15,15 +15,17 @@ namespace Taurus.Plugin.DistributedTask
 
             internal static void OnReceived(MQMsg msg)
             {
+                //如果客户端服务重启，增加投递失败=》改为广播回应。
+                msg.ExChange = DTSConfig.Client.MQ.ProcessExChange;//以广播回应。
+
                 Log.Print("MQ.OnReceived : " + msg.ToJson());
-                DTSConsole.WriteDebugLine("Server.MQ.OnReceived : " + msg.MsgID + " - " + msg.TaskType + " - IsDeleteAck :" + msg.IsDeleteAck);
-                if (msg.IsDeleteAck.HasValue && msg.IsDeleteAck.Value)
+                bool isDeleteAck = msg.IsDeleteAck.HasValue && msg.IsDeleteAck.Value;
+                DTSConsole.WriteDebugLine("Server.MQ.OnReceived : " + msg.MsgID + " - " + msg.TaskType + " - " + msg.CallBackKey + (isDeleteAck ? " - IsDeleteAck :" + msg.IsDeleteAck : ""));
+                if (isDeleteAck)
                 {
                     //打印分隔线，以便查看
-                    DTSConsole.WriteDebugLine("----------------------------------------------------------------" );
+                    DTSConsole.WriteDebugLine("----------------------------------------------------------------");
                 }
-
-                //广播类型，写入的时候，要加进程编号。
 
                 var localLock = DistributedLock.Local;
                 string key = "DTS.Server." + msg.MsgID;
@@ -95,7 +97,7 @@ namespace Taurus.Plugin.DistributedTask
                 string returnContent = null;
                 try
                 {
-                    DTSServerSubscribePara para = new DTSServerSubscribePara(msg);
+                    DTSSubscribePara para = new DTSSubscribePara(msg);
                     object obj = method.IsStatic ? null : Activator.CreateInstance(method.DeclaringType);
                     object result = method.Invoke(obj, new object[] { para });
                     if (result is bool && !(bool)result) { return; }

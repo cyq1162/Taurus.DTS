@@ -6,9 +6,6 @@ namespace Taurus.Plugin.DistributedTask
     {
         public static partial class Client
         {
-            /// <summary>
-            /// dtc 写数据库、写队列
-            /// </summary>
             internal static partial class Worker
             {
                 public static bool Add(TaskTable table)

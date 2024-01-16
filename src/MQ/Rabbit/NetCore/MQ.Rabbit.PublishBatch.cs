@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using CYQ.Data.Tool;
+using CYQ.Data.Json;
 
 namespace Taurus.Plugin.DistributedTask
 {
@@ -18,9 +19,10 @@ namespace Taurus.Plugin.DistributedTask
             if (!IsConnectOK) { return false; }
             try
             {
-
                 using (var channel = DefaultConnection.CreateModel())
                 {
+                    bool needSleep = false;
+                    channel.BasicReturn += Channel_BasicReturn;
                     var pub = channel.CreateBasicPublishBatch();
                     foreach (MQMsg msg in msgList)
                     {
@@ -45,8 +47,14 @@ namespace Taurus.Plugin.DistributedTask
                                     declareQueueNames.Add(msg.QueueName);
                                 }
                             }
-
-                            pub.Add("", msg.QueueName, false, null, bytes);
+                            IBasicProperties basic = null;
+                            if (!string.IsNullOrEmpty(msg.ExChange))
+                            {
+                                basic = channel.CreateBasicProperties();
+                                basic.ReplyTo = msg.ExChange;
+                                needSleep = true;
+                            }
+                            pub.Add("", msg.QueueName, true, basic, bytes);
                         }
                         else
                         {
@@ -54,7 +62,11 @@ namespace Taurus.Plugin.DistributedTask
                         }
                     }
                     pub.Publish();
-
+                    if(needSleep)
+                    {
+                        Thread.Sleep(5);//延时关闭，以便可能失效队列处理。
+                    }
+                   
                 }
                 return true;
             }

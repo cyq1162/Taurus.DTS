@@ -38,12 +38,12 @@ namespace Taurus.Plugin.DistributedTask
                     #region 服务端订阅
 
 
-                    object[] items = method.GetCustomAttributes(typeof(DTSServerSubscribeAttribute), true);
+                    object[] items = method.GetCustomAttributes(typeof(DTSSubscribeAttribute), true);
                     if (items != null && items.Length > 0)
                     {
                         foreach (var item in items)
                         {
-                            var dtcs = item as DTSServerSubscribeAttribute;
+                            var dtcs = item as DTSSubscribeAttribute;
                             string key = dtcs.SubKey;
                             if (!dicServerMethods.ContainsKey(key))
                             {
@@ -53,12 +53,12 @@ namespace Taurus.Plugin.DistributedTask
                     }
                     #endregion
                     #region 客户端订阅
-                    items = method.GetCustomAttributes(typeof(DTSClientCallBackAttribute), true);
+                    items = method.GetCustomAttributes(typeof(DTSCallBackAttribute), true);
                     if (items != null && items.Length > 0)
                     {
                         foreach (var item in items)
                         {
-                            var dtcs = item as DTSClientCallBackAttribute;
+                            var dtcs = item as DTSCallBackAttribute;
                             string key = dtcs.CallBackKey;
                             if (!dicClientMethods.ContainsKey(key))
                             {
