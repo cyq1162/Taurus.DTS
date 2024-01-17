@@ -25,7 +25,6 @@ namespace Taurus.Plugin.DistributedTask
                 //net 版本没有批量功能
                 using (var channel = DefaultConnection.CreateModel())
                 {
-                    bool needSleep = false;
                     channel.BasicReturn += Channel_BasicReturn;
                     foreach (var msg in msgList)
                     {
@@ -55,7 +54,6 @@ namespace Taurus.Plugin.DistributedTask
                             {
                                 basic = channel.CreateBasicProperties();
                                 basic.ReplyTo = msg.ExChange;
-                                needSleep = true;
                             }
                             channel.BasicPublish("", msg.QueueName, true, basic, body: bytes);
                         }
@@ -63,10 +61,6 @@ namespace Taurus.Plugin.DistributedTask
                         {
                             channel.BasicPublish(msg.ExChange, "", null, body: bytes);
                         }
-                    }
-                    if (needSleep)
-                    {
-                        Thread.Sleep(5);//延时关闭，以便可能失效队列处理。
                     }
                 }
                 return true;

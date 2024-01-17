@@ -1,4 +1,5 @@
 ﻿using CYQ.Data.Json;
+using CYQ.Data.Lock;
 using System;
 using System.IO;
 
@@ -224,6 +225,7 @@ namespace Taurus.Plugin.DistributedTask
                 {
                     return false;
                 }
+
                 MQMsg msg = table.ToMQMsg();
                 switch (taskType)
                 {
@@ -254,7 +256,16 @@ namespace Taurus.Plugin.DistributedTask
                 }
                 else if (mqType == MQType.Kafka)
                 {
-                    msg.CallBackName = isWriteTxt ? DTSConfig.Client.MQ.ProcessTopic : DTSConfig.Client.MQ.ProjectTopic;
+                    //isWriteTxt = string.IsNullOrEmpty(DTSConfig.Client.Conn) && DistributedLock.Instance.LockType == LockType.Local;
+                    if (isWriteTxt)
+                    {
+                        msg.CallBackName = DTSConfig.Client.MQ.ProcessTopic;
+                    }
+                    else
+                    {
+                        msg.CallBackName = DTSConfig.Client.MQ.ProjectTopic;
+                    }
+
                 }
                 Worker.Start(msg);
                 return true;

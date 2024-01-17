@@ -35,12 +35,7 @@ namespace Taurus.Plugin.DistributedTask
             {
                 get
                 {
-#if DEBUG
-                    return AppConfig.GetAppBool("DTS.Client.IsPrintTraceLog", true);
-#else
-                    return AppConfig.GetAppBool("DTS.Client.IsPrintTraceLog", false);
-#endif
-
+                    return AppConfig.GetAppBool("DTS.Client.IsPrintTraceLog", AppConfig.IsDebugMode);
                 }
                 set
                 {

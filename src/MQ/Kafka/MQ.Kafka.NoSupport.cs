@@ -13,7 +13,14 @@ namespace Taurus.Plugin.DistributedTask
             servers = mqConn;
             this.isClient = isClient;
         }
-        public override MQType MQType =>  MQType.Kafka;
+        public override MQType MQType
+        {
+            get
+            {
+                return MQType.Kafka;
+            }
+        }
+           
 
         public override bool Listen(string queueNameOrGroupName, OnReceivedDelegate onReceivedDelegate, string bindExNameOrTopicName, bool isBroadcast)
         {

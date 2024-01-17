@@ -5,7 +5,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Security.Principal;
 using System.Threading;
-using static Taurus.Plugin.DistributedTask.DTS.Client;
 
 
 namespace Taurus.Plugin.DistributedTask

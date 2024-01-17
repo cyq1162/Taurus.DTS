@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using CYQ.Data.Tool;
+using System.Collections.Concurrent;
 
 namespace Taurus.Plugin.DistributedTask
 {
@@ -284,34 +285,71 @@ namespace Taurus.Plugin.DistributedTask
             }
         }
 
+
+
+        static ConcurrentQueue<BasicReturnEventArgs> basicReturnEventArgs = new ConcurrentQueue<BasicReturnEventArgs>();
+        static bool threadIsWorking = false;
+        static object lockRePublishObj = new object();
         private void Channel_BasicReturn(object sender, BasicReturnEventArgs e)
+        {
+            basicReturnEventArgs.Enqueue(e);
+            if (threadIsWorking || !_IsConnectOK) { return; }
+            lock (lockRePublishObj)
+            {
+                if (!threadIsWorking)
+                {
+                    threadIsWorking = true;
+                    ThreadPool.QueueUserWorkItem(new WaitCallback(DoRePublishWork), null);
+                }
+            }
+        }
+
+        private void DoRePublishWork(object p)
         {
             try
             {
-                if (_IsConnectOK)
+                while (_IsConnectOK && !basicReturnEventArgs.IsEmpty)
                 {
-                    if (e.BasicProperties != null && !string.IsNullOrEmpty(e.BasicProperties.ReplyTo))
+                    List<BasicReturnEventArgs> list = new List<BasicReturnEventArgs>();
+                    while (_IsConnectOK && !basicReturnEventArgs.IsEmpty && list.Count <= 500)
                     {
-                        var channel = sender as IModel;
-                        bool isCreate = false;
-                        if (channel == null || !channel.IsOpen)
+                        BasicReturnEventArgs e = null;
+                        if (basicReturnEventArgs.TryDequeue(out e))
                         {
-                            channel = DefaultConnection.CreateModel();
-                            isCreate = true;
-                        }
-                        if (channel != null)
-                        {
-                            channel.BasicPublish(e.BasicProperties.ReplyTo, "", false, null, e.Body);
-                            if (isCreate) { channel.Close(); }
+                            list.Add(e);
                         }
                     }
+                    if (list.Count > 0)
+                    {
+                        if (_IsConnectOK)
+                        {
+                            using (var channel = DefaultConnection.CreateModel())
+                            {
+                                foreach (var e in list)
+                                {
+                                    channel.BasicPublish(e.BasicProperties.ReplyTo, "", false, null, e.Body);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            //链接出问题，收回去。
+                            foreach (var e in list)
+                            {
+                                basicReturnEventArgs.Enqueue(e);
+                            }
+                        }
+                        list.Clear();
+                    }
+                    Thread.Sleep(10);
                 }
+                threadIsWorking = false;
             }
             catch (Exception err)
             {
+                threadIsWorking = false;
                 Log.Write(err, "MQ.Rabbit");
             }
-
         }
     }
 }

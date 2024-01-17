@@ -6,9 +6,9 @@ using System.Runtime.InteropServices;
 // 控制。更改这些特性值可修改
 // 与程序集关联的信息。
 [assembly: AssemblyTitle("Taurus.DTS 分布式任务框架 .Net 版本")]
-[assembly: AssemblyDescription("Taurus.DTS 是一款用于 .Net 或 .Net Core 的分布任务的框架，支持任务即时订阅、延时任务、定时任务。")]
+[assembly: AssemblyDescription("Taurus.DTS 是一款用于 .Net 或 .Net Core 的分布任务的框架，支持即时订阅任务、延时任务、定时任务、广播任务。")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("路过秋天 （2024-01-16）")]
+[assembly: AssemblyCompany("路过秋天 （2024-01-17）")]
 [assembly: AssemblyProduct("Taurus.DTS 分布式任务框架 .NET 版本")]
 [assembly: AssemblyCopyright("版权所有 (C) 路过秋天 2024-2124")]
 [assembly: AssemblyTrademark("Taurus.DTS")]
@@ -32,5 +32,5 @@ using System.Runtime.InteropServices;
 //可以指定所有这些值，也可以使用“生成号”和“修订号”的默认值
 //通过使用 "*"，如下所示:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("3.2.0.1")]
-[assembly: AssemblyFileVersion("3.2.0.1")]
+[assembly: AssemblyVersion("3.3.0.0")]
+[assembly: AssemblyFileVersion("3.3.0.0")]

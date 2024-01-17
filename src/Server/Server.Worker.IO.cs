@@ -1,5 +1,4 @@
 ﻿using CYQ.Data;
-using CYQ.Data.Cache;
 using CYQ.Data.Tool;
 using System;
 using System.IO;
@@ -33,26 +32,14 @@ namespace Taurus.Plugin.DistributedTask
                             id += "_" + DTS.ProcessID;//广播需要与进程关联
                         }
 
-                        var disCache = DistributedCache.Instance;
                         string json = table.ToJson();
-                        bool isOK = false;
-                        if (disCache.CacheType == CacheType.Redis || disCache.CacheType == CacheType.MemCache)
-                        {
-                            isOK = disCache.Set(GetKey(id), json, DTSConfig.Server.Worker.TimeoutKeepSecond / 60);//写入分布式缓存
-                        }
+                        string path = AppConfig.WebRootPath + "App_Data/dts/server/" + table.TaskType.ToLower() + "/" + id + ".txt";
+                        bool isOK = IOHelper.Write(path, json);
                         if (isOK)
                         {
-                            Log.Print(disCache.CacheType + ".Write : " + json);
+                            Log.Print("IO.Write : " + json);
                         }
-                        else
-                        {
-                            string path = AppConfig.WebRootPath + "App_Data/dts/server/" + table.TaskType.ToLower() + "/" + id + ".txt";
-                            isOK = IOHelper.Write(path, json);
-                            if (isOK)
-                            {
-                                Log.Print("IO.Write : " + json);
-                            }
-                        }
+
                         return isOK;
 
 
@@ -67,18 +54,8 @@ namespace Taurus.Plugin.DistributedTask
                         {
                             msgID += "_" + DTS.ProcessID;//广播需要与进程关联
                         }
-                        var disCache = DistributedCache.Instance;
-                        bool isOK = false;
-                        if (disCache.CacheType == CacheType.Redis || disCache.CacheType == CacheType.MemCache)
-                        {
-                            isOK = disCache.Remove(GetKey(msgID));//删除数据。
-                        }
-                        if (!isOK)
-                        {
-                            string path = AppConfig.WebRootPath + "App_Data/dts/server/" + taskType.ToLower() + "/" + msgID + ".txt";
-                            isOK = IOHelper.Delete(path);
-                        }
-                        return isOK;
+                        string path = AppConfig.WebRootPath + "App_Data/dts/server/" + taskType.ToLower() + "/" + msgID + ".txt";
+                        return IOHelper.Delete(path);
                     }
 
                     /// <summary>
@@ -90,18 +67,8 @@ namespace Taurus.Plugin.DistributedTask
                         {
                             msgID += "_" + DTS.ProcessID;//广播需要与进程关联
                         }
-                        var disCache = DistributedCache.Instance;
-                        bool isExists = false;
-                        if (disCache.CacheType == CacheType.Redis || disCache.CacheType == CacheType.MemCache)
-                        {
-                            isExists = disCache.Get(GetKey(msgID)) != null;
-                        }
-                        if (!isExists)
-                        {
-                            string path = AppConfig.WebRootPath + "App_Data/dts/server/" + taskType.ToLower() + "/" + msgID + ".txt";
-                            isExists = IOHelper.ExistsDirectory(path);
-                        }
-                        return isExists;
+                        string path = AppConfig.WebRootPath + "App_Data/dts/server/" + taskType.ToLower() + "/" + msgID + ".txt";
+                        return IOHelper.ExistsDirectory(path);
                     }
 
 
@@ -110,36 +77,33 @@ namespace Taurus.Plugin.DistributedTask
                     /// </summary>
                     public static void DeleteTimeoutTable()
                     {
-                        var disCache = DistributedCache.Instance;
-                        if (disCache.CacheType == CacheType.LocalCache)
+                        try
                         {
-                            try
+                            string folder = AppConfig.WebRootPath + "App_Data/dts/server/";
+                            DirectoryInfo directoryInfo = new DirectoryInfo(folder);
+                            if (directoryInfo.Exists)
                             {
-                                string folder = AppConfig.WebRootPath + "App_Data/dts/server/";
-                                DirectoryInfo directoryInfo = new DirectoryInfo(folder);
-                                if (directoryInfo.Exists)
+                                //System.IO.Directory.em
+                                FileInfo[] files = directoryInfo.GetFiles("*.txt", SearchOption.AllDirectories);
+                                if (files != null && files.Length > 0)
                                 {
-                                    //System.IO.Directory.em
-                                    FileInfo[] files = directoryInfo.GetFiles("*.txt", SearchOption.AllDirectories);
-                                    if (files != null && files.Length > 0)
-                                    {
 
-                                        int timeoutSecond = DTSConfig.Server.Worker.TimeoutKeepSecond;
-                                        foreach (FileInfo file in files)
+                                    int timeoutSecond = DTSConfig.Server.Worker.TimeoutKeepSecond;
+                                    foreach (FileInfo file in files)
+                                    {
+                                        if (file.LastWriteTime < DateTime.Now.AddSeconds(-timeoutSecond))
                                         {
-                                            if (file.LastWriteTime < DateTime.Now.AddSeconds(-timeoutSecond))
-                                            {
-                                                file.Delete();
-                                            }
+                                            file.Delete();
                                         }
                                     }
                                 }
                             }
-                            catch (Exception err)
-                            {
-                                Log.Error(err);
-                            }
                         }
+                        catch (Exception err)
+                        {
+                            Log.Error(err);
+                        }
+
                     }
                 }
             }

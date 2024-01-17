@@ -20,36 +20,17 @@ namespace Taurus.Plugin.DistributedTask
                     {
                         return Worker.IO.GetKey(id);
                     }
-                    internal static void SetIDListWithDisLock(DistributedCache disCache, string id, string taskType, bool isAdd)
-                    {
-                        Worker.IO.SetIDListWithDisLock(disCache, id, taskType, isAdd);
-                    }
 
                     const string CronTableType = "cron-table";
                     public static bool WriteCronTable(CronTable table)
                     {
-                        var disCache = DistributedCache.Instance;
                         string id = table.MsgID;
                         string json = table.ToJson();
-                        //写入Redis
-                        bool isOK = false;
-                        if (disCache.CacheType == CacheType.Redis || disCache.CacheType == CacheType.MemCache)
-                        {
-                            isOK = disCache.Set(GetKey(id), json, DTSConfig.Client.Worker.TimeoutKeepSecond / 60);//写入分布式缓存
-                            SetIDListWithDisLock(disCache, id, CronTableType, true);
-                        }
+                        string path = AppConfig.WebRootPath + "App_Data/dts/client/" + CronTableType + "/" + id + ".txt";
+                        bool isOK = IOHelper.Write(path, json);
                         if (isOK)
                         {
-                            Log.Print(disCache.CacheType + ".Write : " + json);
-                        }
-                        else
-                        {
-                            string path = AppConfig.WebRootPath + "App_Data/dts/client/" + CronTableType + "/" + id + ".txt";
-                            isOK = IOHelper.Write(path, json);
-                            if (isOK)
-                            {
-                                Log.Print("IO.Write : " + json);
-                            }
+                            Log.Print("IO.Write : " + json);
                         }
                         return isOK;
 
@@ -73,19 +54,9 @@ namespace Taurus.Plugin.DistributedTask
                     public static bool DeleteCronTable(string msgID, string taskType)
                     {
                         string id = msgID;
-                        var disCache = DistributedCache.Instance;
-                        bool isOK = false;
-                        if (disCache.CacheType == CacheType.Redis || disCache.CacheType == CacheType.MemCache)
-                        {
-                            isOK = disCache.Remove(GetKey(id));//删除数据。
-                            SetIDListWithDisLock(disCache, id, taskType, false);
-                        }
-                        if (!isOK)
-                        {
-                            string path = AppConfig.WebRootPath + "App_Data/dts/client/" + CronTableType + "/" + id + ".txt";
-                            isOK = IOHelper.Delete(path);
-                        }
-                        return isOK;
+                        string path = AppConfig.WebRootPath + "App_Data/dts/client/" + CronTableType + "/" + id + ".txt";
+                        return IOHelper.Delete(path);
+
                     }
 
                     /// <summary>
@@ -94,47 +65,24 @@ namespace Taurus.Plugin.DistributedTask
                     public static List<CronTable> GetCronTable()
                     {
                         List<CronTable> tables = new List<CronTable>();
-                        var disCache = DistributedCache.Instance;
 
-                        if (disCache.CacheType == CacheType.Redis || disCache.CacheType == CacheType.MemCache)
+                        string folder = AppConfig.WebRootPath + "App_Data/dts/client/" + CronTableType;
+                        if (System.IO.Directory.Exists(folder))
                         {
-                            string taskID2 = disCache.Get<string>(GetKey(CronTableType));
-                            var ids = taskID2;
-                            if (!string.IsNullOrEmpty(ids))
+                            string[] files = IOHelper.GetFiles(folder, "*.txt", System.IO.SearchOption.TopDirectoryOnly);
+                            if (files != null && files.Length > 0)
                             {
-                                foreach (string id in ids.Split(','))
+                                foreach (string file in files)
                                 {
-                                    var json = disCache.Get<string>(GetKey(id));
+                                    string json = IOHelper.ReadAllText(file, 0);
                                     if (!string.IsNullOrEmpty(json))
                                     {
-                                        var entity = JsonHelper.ToEntity<CronTable>(json);
-                                        if (entity != null)
-                                        {
-                                            tables.Add(entity);
-                                        }
+                                        tables.Add(JsonHelper.ToEntity<CronTable>(json));
                                     }
                                 }
                             }
                         }
-                        if (tables.Count == 0)
-                        {
-                            string folder = AppConfig.WebRootPath + "App_Data/dts/client/" + CronTableType;
-                            if (System.IO.Directory.Exists(folder))
-                            {
-                                string[] files = IOHelper.GetFiles(folder, "*.txt", System.IO.SearchOption.TopDirectoryOnly);
-                                if (files != null && files.Length > 0)
-                                {
-                                    foreach (string file in files)
-                                    {
-                                        string json = IOHelper.ReadAllText(file, 0);
-                                        if (!string.IsNullOrEmpty(json))
-                                        {
-                                            tables.Add(JsonHelper.ToEntity<CronTable>(json));
-                                        }
-                                    }
-                                }
-                            }
-                        }
+
                         return tables;
                     }
                 }

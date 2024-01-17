@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
 	  <AssemblyName>Taurus.DTS</AssemblyName>
 	  <AssemblyVersion>3.3.0</AssemblyVersion>
 	  <FileVersion>3.3.0</FileVersion>
@@ -15,24 +15,34 @@
 	  <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
 	  <GenerateDocumentationFile>True</GenerateDocumentationFile>
 	  <IsPublishable>False</IsPublishable>
+	  <BaseOutputPath>bin\Rabbit\</BaseOutputPath>
+	  <BaseIntermediateOutputPath>obj\Rabbit\</BaseIntermediateOutputPath>
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="bin\**" />
     <Compile Remove="MQ\Rabbit\DotNet\**" />
+    <Compile Remove="obj\**" />
+    <Compile Remove="packages\**" />
     <Compile Remove="Properties\**" />
+    <EmbeddedResource Remove="bin\**" />
     <EmbeddedResource Remove="MQ\Rabbit\DotNet\**" />
+    <EmbeddedResource Remove="obj\**" />
+    <EmbeddedResource Remove="packages\**" />
     <EmbeddedResource Remove="Properties\**" />
+    <None Remove="bin\**" />
     <None Remove="MQ\Rabbit\DotNet\**" />
+    <None Remove="obj\**" />
+    <None Remove="packages\**" />
     <None Remove="Properties\**" />
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Remove="MQ\Kafka\MQ.Kafka.NoSupport.cs" />
+    <Compile Remove="MQ\Kafka\MQ.Kafka.cs" />
     <Compile Remove="MQ\Rabbit\MQ.Rabbit.NoSupport.cs" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Confluent.Kafka" Version="2.3.0" />
     <PackageReference Include="RabbitMQ.Client" Version="6.8.1" />
   </ItemGroup>
 

@@ -26,39 +26,16 @@ namespace Taurus.Plugin.DistributedTask
                     }
                     public static bool Write(TaskTable table)
                     {
-                        bool isWriteTxt = false;
-                        return Write(table, out isWriteTxt);
-                    }
-                    /// <summary>
-                    /// 写入数据
-                    /// </summary>
-                    public static bool Write(TaskTable table, out bool isWriteTxt)
-                    {
-                        isWriteTxt = false;
-                        var disCache = DistributedCache.Instance;
                         string id = table.MsgID;
                         string json = table.ToJson();
-                        //写入Redis
-                        bool isOK = false;
-                        if (disCache.CacheType == CacheType.Redis || disCache.CacheType == CacheType.MemCache)
-                        {
-                            isOK = disCache.Set(GetKey(id), json, DTSConfig.Client.Worker.TimeoutKeepSecond / 60);//写入分布式缓存
-                            SetIDListWithDisLock(disCache, id, table.TaskType, true);
-                        }
+
+                        string path = AppConfig.WebRootPath + "App_Data/dts/client/task/" + table.TaskType.ToLower() + "/" + id + ".txt";
+                        bool isOK = IOHelper.Write(path, json);
                         if (isOK)
                         {
-                            Log.Print(disCache.CacheType + ".Write : " + json);
+                            Log.Print("IO.Write : " + json);
                         }
-                        else
-                        {
-                            string path = AppConfig.WebRootPath + "App_Data/dts/client/task/" + table.TaskType.ToLower() + "/" + id + ".txt";
-                            isOK = IOHelper.Write(path, json);
-                            if (isOK)
-                            {
-                                isWriteTxt = true;
-                                Log.Print("IO.Write : " + json);
-                            }
-                        }
+
                         return isOK;
                     }
 
@@ -68,19 +45,8 @@ namespace Taurus.Plugin.DistributedTask
                     public static bool Delete(string msgID, string taskType)
                     {
                         string id = msgID;
-                        var disCache = DistributedCache.Instance;
-                        bool isOK = false;
-                        if (disCache.CacheType == CacheType.Redis || disCache.CacheType == CacheType.MemCache)
-                        {
-                            isOK = disCache.Remove(GetKey(id));//删除数据。
-                            SetIDListWithDisLock(disCache, id, taskType, false);
-                        }
-                        if (!isOK)
-                        {
-                            string path = AppConfig.WebRootPath + "App_Data/dts/client/task/" + taskType.ToLower() + "/" + id + ".txt";
-                            isOK = IOHelper.Delete(path);
-                        }
-                        return isOK;
+                        string path = AppConfig.WebRootPath + "App_Data/dts/client/task/" + taskType.ToLower() + "/" + id + ".txt";
+                        return IOHelper.Delete(path);
                     }
                     /// <summary>
                     /// 读取数据
@@ -88,18 +54,8 @@ namespace Taurus.Plugin.DistributedTask
                     public static string Read(string msgID, string taskType)
                     {
                         string id = msgID;
-                        var disCache = DistributedCache.Instance;
-                        string result = null;
-                        if (disCache.CacheType == CacheType.Redis || disCache.CacheType == CacheType.MemCache)
-                        {
-                            result = disCache.Get<string>(GetKey(id));
-                        }
-                        if (string.IsNullOrEmpty(result))
-                        {
-                            string path = AppConfig.WebRootPath + "App_Data/dts/client/task/" + taskType.ToLower() + "/" + id + ".txt";
-                            result = IOHelper.ReadAllText(path);
-                        }
-                        return result;
+                        string path = AppConfig.WebRootPath + "App_Data/dts/client/task/" + taskType.ToLower() + "/" + id + ".txt";
+                        return IOHelper.ReadAllText(path);
                     }
 
 
@@ -109,112 +65,27 @@ namespace Taurus.Plugin.DistributedTask
                     public static List<TaskTable> GetTaskRetryTable()
                     {
                         List<TaskTable> tables = new List<TaskTable>();
-                        var disCache = DistributedCache.Instance;
 
-                        if (disCache.CacheType == CacheType.Redis || disCache.CacheType == CacheType.MemCache)
+                        string folder = AppConfig.WebRootPath + "App_Data/dts/client/task/";
+                        if (System.IO.Directory.Exists(folder))
                         {
-                            string taskID1 = disCache.Get<string>(GetKey(TaskType.Instant.ToString()));
-                            string taskID2 = disCache.Get<string>(GetKey(TaskType.Delay.ToString()));
-                            string taskID3 = disCache.Get<string>(GetKey(TaskType.Cron.ToString()));
-                            var ids = taskID1 + taskID2 + taskID3;
-                            if (!string.IsNullOrEmpty(ids))
+                            string[] files = IOHelper.GetFiles(folder, "*.txt", System.IO.SearchOption.AllDirectories);
+                            if (files != null && files.Length > 0)
                             {
-                                foreach (string id in ids.Split(','))
+                                foreach (string file in files)
                                 {
-                                    if (string.IsNullOrEmpty(id)) { continue; }
-                                    var json = disCache.Get<string>(GetKey(id));
+                                    string json = IOHelper.ReadAllText(file, 0);
                                     if (!string.IsNullOrEmpty(json))
                                     {
-                                        var entity = JsonHelper.ToEntity<TaskTable>(json);
-                                        if (entity != null)
-                                        {
-                                            tables.Add(entity);
-                                        }
+                                        tables.Add(JsonHelper.ToEntity<TaskTable>(json));
                                     }
                                 }
                             }
                         }
-                        if (tables.Count == 0)
-                        {
-                            string folder = AppConfig.WebRootPath + "App_Data/dts/client/task/";
-                            if (System.IO.Directory.Exists(folder))
-                            {
-                                string[] files = IOHelper.GetFiles(folder, "*.txt", System.IO.SearchOption.AllDirectories);
-                                if (files != null && files.Length > 0)
-                                {
-                                    foreach (string file in files)
-                                    {
-                                        string json = IOHelper.ReadAllText(file, 0);
-                                        if (!string.IsNullOrEmpty(json))
-                                        {
-                                            tables.Add(JsonHelper.ToEntity<TaskTable>(json));
-                                        }
-                                    }
-                                }
-                            }
-                        }
+
                         return tables;
                     }
 
-                    /// <summary>
-                    /// 维护一个列表 DoTask=>{id1,id2,id3}
-                    /// </summary>
-                    internal static void SetIDListWithDisLock(DistributedCache disCache, string id, string taskType, bool isAdd)
-                    {
-                        #region 更新列表
-                        double defaultCacheTime = DTSConfig.Client.Worker.TimeoutKeepSecond / 60;
-                        var disLock = DistributedLock.Instance;
-                        bool isGetLock = false;
-                        string taskTypeKey = GetKey("TaskType:" + taskType);
-                        string lockKey = taskTypeKey + ".lock";
-                        try
-                        {
-                            isGetLock = disLock.Lock(lockKey, 5000);//锁定
-                            if (isGetLock)
-                            {
-                                var ids = disCache.Get<string>(taskTypeKey);
-                                if (isAdd)
-                                {
-                                    if (ids == null)
-                                    {
-                                        disCache.Set(taskTypeKey, id + ",", defaultCacheTime);
-
-                                    }
-                                    else
-                                    {
-                                        if (!ids.Contains(id))
-                                        {
-                                            disCache.Set(taskTypeKey, ids + id + ",", defaultCacheTime);
-                                        }
-                                    }
-                                }
-                                else
-                                {
-                                    //remove
-                                    if (!string.IsNullOrEmpty(ids))
-                                    {
-                                        ids = ids.Replace(id + ",", "");
-                                    }
-                                    if (string.IsNullOrEmpty(ids))
-                                    {
-                                        disCache.Remove(taskTypeKey);
-                                    }
-                                    else
-                                    {
-                                        disCache.Set(taskTypeKey, ids, defaultCacheTime);
-                                    }
-                                }
-                            }
-                        }
-                        finally
-                        {
-                            if (isGetLock)
-                            {
-                                disLock.UnLock(lockKey);//释放锁。
-                            }
-                        }
-                        #endregion
-                    }
                 }
             }
 

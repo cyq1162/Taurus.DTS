@@ -86,7 +86,7 @@ namespace Taurus.Plugin.DistributedTask
 
 
                 /// <summary>
-                /// 进程主题：以进程为单位，从连接开始读取数据。
+                /// 进程主题：以进程为单位，从 AutoOffsetReset.Latest 开始读取数据。
                 /// </summary>
                 internal static string ProcessTopic
                 {
@@ -97,7 +97,7 @@ namespace Taurus.Plugin.DistributedTask
                 }
 
                 /// <summary>
-                /// 进程主题：以进程为单位，从连接开始读取数据。
+                /// 进程主题：以进程为单位，从 AutoOffsetReset.Earliest 开始读取数据。
                 /// </summary>
                 internal static string ProcessGroup
                 {

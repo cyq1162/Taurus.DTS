@@ -19,7 +19,7 @@ namespace Taurus.Plugin.DistributedTask
                 if (mqType == MQType.Rabbit)
                 {
                     // RabbitMQ 用临时队列，如果客户端服务重启，回调临时队列投递失效=》以广播回应。
-                    msg.ExChange = DTSConfig.Client.MQ.ProcessExChange;//以广播回应。
+                    msg.ExChange = DTSConfig.Client.MQ.ProcessExChange;//以广播回应，如果对方不在线，则消息丢失。
                     msg.CallBackName = DTSConfig.Server.MQ.ProcessQueue;
                 }
                 else if (mqType == MQType.Kafka)
