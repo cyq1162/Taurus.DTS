@@ -51,7 +51,7 @@ namespace Console_App_Client
             if (i == 2)
             {
                 //发布一个延时1分钟的任务
-                DTS.Client.Delay.PublishAsync(1, "i publish a delay task.", "DoInstantTask", "DelayCallBack");
+                DTS.Client.Delay.PublishAsync(1, "i publish a delay task.", "DoDelayTask", "DelayCallBack");
                 Console.WriteLine("Wait for 1 minute...");
             }
             else if (i == 3)

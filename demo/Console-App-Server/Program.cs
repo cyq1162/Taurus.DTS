@@ -38,7 +38,7 @@ namespace Console_App_Server
             return true;
         }
 
-        [DTSSubscribe("DoInstantTask")]
+        [DTSSubscribe("DoDelayTask")]
         private static bool B(DTSSubscribePara para)
         {
             para.CallBackContent = "show you b.";
