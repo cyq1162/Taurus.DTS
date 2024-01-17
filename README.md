@@ -6,7 +6,8 @@
 
 <h4>基础说明：</h4>
 <p>1、框架分为 Client（客户端，即任务发起端）和 Server（服务端，即方法订阅方）。</p>
-<p>2、项目需要选择数据存储类型（数据库或默认本地文本）和数据传输类型（消息队列）。</p>
+<p>2、框架支持即时任务、延时任务、Cron表达式任务定时任务、广播任务，四种方式。</p>
+<p>3、项目需要配置的参数：1、数据库（可选）；2、MQ（必选）。</p>
 
 <h4>数据存储：</h4>
 <p>可选择数据库（MSSQL、MySql、Oracle、PostgreSql 等 CYQ.Data 所支持的10多种数据库之一）</p>
@@ -30,7 +31,7 @@
 
 # Server 端 使用示例：
 <p>1、Nuget 搜索 Taurus.DTS 引入工程项目中。</p>
-<p>2、Program 或 Startup 添加服务使用引入：</p>
+<p>2、如果是ASP.Net Core 程序：Program 或 Startup 添加服务使用引入：</p>
 <pre><code>  services.AddTaurusDts(); // 服务添加
   app.UseTaurusDts(TaskStartType.Server); //服务使用，启用服务端
 </code></pre>
@@ -45,60 +46,78 @@
 <p>4、选择数据库对应的依赖组件，如MySql，可以：</p>
 <pre><code>Nuget 上可以搜索 MySql.Data 、或者 CYQ.Data.MySql (会自动引入MySql.Data)  都可， 引入项目即可。
 </code></pre>
-<p>5、代码编写，可以参考源码中提供的示例代码，如下：</p>
+<p>5、代码编写，可以参考源码中提供的示例代码，如下为控制台示例代码：</p>
 <pre><code>
-     public class ServerController : Taurus.Mvc.Controller
+using System;
+using Taurus.Plugin.DistributedTask;
+
+namespace Console_App_Server
+{
+    internal class Program
     {
-
-        /// <summary>
-        /// provide a Create api , and it provide a transation , call https://localhost:5001/server/create
-        /// </summary>
-        [HttpPost]
-        [Require("name")]
-        public void Create(string name)
+        static void Main(string[] args)
         {
-            //do something insert
-            int createID = 123456;
-            //here will receive a header:X-Request-ID 
-            if (DTC.Server.Subscribe(createID.ToString(), "OnCreate")) // 事务相关信息保存，以便后续回调处理提交或回滚
-            {
-                Console.WriteLine("call : DTC.Server.Subscribe call.");
-            }
-            Write(createID, true);
+
+            DTSConfig.Server.Rabbit = "127.0.0.1;guest;guest;/";
+            //DTSConfig.Server.Kafka = "127.0.0.1:9092;";
+            //DTSConfig.Server.Conn = DTSConfig.Client.Conn;
+
+            DTSConfig.ProjectName = "ConsoleApp5";
+
+            DTS.Server.Start();//start client and server
+
+            Console.WriteLine("---------------------------------------");
+
+            Console.ReadLine();
         }
 
 
-        [DTCServerSubscribe("OnCreate")] //订阅回调，处理提交或回滚
-        private static bool AnyMethodNameForOnCreateCallBack(DTCServerSubscribePara para)
-        {
-            para.CallBackContent = "what message you need?";
-            Console.WriteLine("call back :" + para.ExeType + " , content :" + para.Content);
-            if (para.ExeType == ExeType.Commit) { return true; }
-            if (para.ExeType == ExeType.RollBack)
-            {
-                string createID = para.Content;
-                //return DeleteByID(createID);
-                return true;
-            }
-            return false;
-        }
+    }
 
-        [DTCServerSubscribe("ToDoTask")] // 订阅任务
-        private static bool DoSomeTask(DTCServerSubscribePara para)
+
+    /// <summary>
+    /// 服务端 server class need to public
+    /// </summary>
+    public class Server
+    {
+        [DTSSubscribe("DoInstantTask")]
+        public static bool A(DTSSubscribePara para)
         {
-            Console.WriteLine("call :" + para.ExeType + " , content :" + para.Content);
-            para.CallBackContent = "I do ok.";
+            para.CallBackContent = "show you a.";
             return true;
         }
 
+        [DTSSubscribe("DoInstantTask")]
+        private static bool B(DTSSubscribePara para)
+        {
+            para.CallBackContent = "show you b.";
+            return true;
+        }
+        [DTSSubscribe("DoCronTask")]
+        private static bool C(DTSSubscribePara para)
+        {
+            para.CallBackContent = "show you c.";
+            return true;
+        }
+        /// <summary>
+        /// 定时任务
+        /// </summary>
+        [DTSSubscribe("DoBroadastTask")]
+        private static bool TimerTask(DTSSubscribePara para)
+        {
+            para.CallBackContent = "show you d.";
+            return true;
+        }
     }
+}
+
 </code></pre>
 
 # Client 端 使用示例：
 <p>1、Nuget 搜索 Taurus.DTS 引入工程项目中。</p>
-<p>2、Program 或 Startup 添加服务使用引入：</p>
+<p>2、如果是ASP.Net Core 程序：Program 或 Startup 添加服务使用引入：</p>
 <pre><code>  services.AddTaurusDts(); // 服务添加
-  app.UseTaurusDtc(StartType.Client); //服务使用，启用服务端
+  app.UseTaurusDts(StartType.Client); //服务使用，启用服务端
 </code></pre>
 <p>3、appsettings.json 配置基本属性：</p>
 <pre><code>  {
@@ -111,58 +130,102 @@
 <p>4、选择数据库对应的依赖组件，如MySql，可以：</p>
 <pre><code>Nuget 上可以搜索 MySql.Data 、或者 CYQ.Data.MySql (会自动引入MySql.Data)  都可， 引入项目即可。
 </code></pre>
-<p>5、代码编写，可以参考源码中提供的示例代码，如下：</p>
+<p>5、代码编写，可以参考源码中提供的示例代码，如下为控制台示例代码：</p>
 <pre><code>
-    public class ClientController : Taurus.Mvc.Controller
+using System;
+using System.Threading;
+using Taurus.Plugin.DistributedTask;
+
+namespace Console_App_Client
+{
+    internal class Program
     {
-        [HttpGet]
-        public void Transation()
+        static void Main(string[] args)
         {
-            //do something
-            RpcTask task = Rpc.StartPostAsync("https://localhost:5001/server/create", Encoding.UTF8.GetBytes("name=hello world"));
-            if (task.Result.IsSuccess)
+            DTSConfig.Client.IsPrintTraceLog = false;
+            //AppConfig.Redis.Servers = "127.0.0.1:6379";
+
+            DTSConfig.Client.Rabbit = "127.0.0.1;guest;guest;/";
+            //DTSConfig.Client.Kafka = "127.0.0.1:9092;";
+            DTSConfig.Client.Conn = "server=.;database=mslog;uid=sa;pwd=123456";
+
+            DTSConfig.ProjectName = "ConsoleApp5";
+
+            DTS.Client.Start();//start client and server
+            
+            Console.WriteLine("---------------------------------------");
+            Console.WriteLine("1-InstantTask、2-DelayTask（1Minutes）、3-CronTask、4-DeleteCronTask、5-BroadastTask");
+            Console.WriteLine("Input ：1、2、3、4、5，Press Enter.");
+            while (true)
             {
-                if (JsonHelper.IsSuccess(task.Result.ResultText))
+                string line = Console.ReadLine();
+                try
                 {
-                    if (DTC.Client.CommitAsync(1, "OnOK"))
-                    {
-                        Console.WriteLine("call : DTC.Client.CommitAsync.");
-                    }
-                    Write("Commit OK.", true);
-                    return;
+                    Client.Run(int.Parse(line));
                 }
+                catch(Exception err)
+                {
+                    Console.WriteLine(err.Message);
+                }
+                
             }
-            if (DTC.Client.RollBackAsync(1, "OnFail"))
-            {
-                Console.WriteLine("call : DTC.Client.RollBackAsync call.");
-            }
-            Write("RollBack ing....", false);
+
         }
-
-
-        [DTCClientCallBack("OnFail")]
-        [DTCClientCallBack("OnOK")]
-        [DTCClientCallBack("OnDoOK")]
-        private void OnCallBack(DTCClientCallBackPara para)
-        {
-            Console.WriteLine("call back : " + para.ExeType + " - " + para.CallBackKey + " - " + para.CallBackContent);
-        }
-
-
-        /// <summary>
-        /// to publish a new task , start https://localhost:5000/client/publishtask
-        /// </summary>
-        [HttpGet]
-        public void PublishTask()
-        {
-            if (DTC.Client.PublishTaskAsync("I give you some info.", "ToDoTask", "OnDoOK"))
-            {
-                Console.WriteLine("call : DTC.Client.PublishTaskAsync.");
-            }
-            Write("Publish Task OK.", true);
-        }
-
     }
+
+    /// <summary>
+    /// 客户端 client class need to public if has callback method.
+    /// </summary>
+    public class Client
+    {
+        public static void Run(int i)
+        {
+
+            if (i == 2)
+            {
+                //发布一个延时1分钟的任务
+                DTS.Client.Delay.PublishAsync(1, "i publish a delay task.", "DoInstantTask", "DelayCallBack");
+                Console.WriteLine("Wait for 1 minute...");
+            }
+            else if (i == 3)
+            {
+                //发布一个秒在30时的循环任务。
+                DTS.Client.Cron.PublishAsync("10,30,50 * * * * ?", "i publish a timer task with cron express.", "DoCronTask", "CronCallBack");
+                Console.WriteLine("Wait for execute task when second is 10,30,50...");
+            }
+            else if (i == 4)
+            {
+                //发布一个秒在30时的循环任务。
+                DTS.Client.Cron.DeleteAsync("DoCronTask", null, "CronCallBack");
+            }
+            else if (i == 5)
+            {
+                //发布一个广播任务
+                DTS.Client.Broadast.PublishAsync("i publish a task for all server.", "DoBroadastTask", "BroadastCallBack");
+            }
+            else
+            {
+                for (int k = 0; k < 1; k++)
+                {
+                    //发布一个即时任务
+                    DTS.Client.Instant.PublishAsync("i publish a task instantly.", "DoInstantTask", "InstantCallBack");
+                    Console.WriteLine(k);
+                }
+                
+            }
+        }
+
+        [DTSCallBack("InstantCallBack")]
+        [DTSCallBack("DelayCallBack")]
+        [DTSCallBack("CronCallBack")]
+        [DTSCallBack("BroadastCallBack")]
+        private static void OnCallBack(DTSCallBackPara para)
+        {
+            Console.WriteLine("Client callback : " + para.TaskType + " - " + para.CallBackKey + " - " + para.CallBackContent);
+        }
+    }
+}
+
 </code></pre>
 
 # 各种数据库链接语句大全
