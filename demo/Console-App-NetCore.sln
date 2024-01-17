@@ -3,19 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.8.34408.163
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Console-App-Both", "Console-App\Console-App-Both.csproj", "{79D1F22B-AF05-42F8-A1E2-0B0AE574D622}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Console-App-Both", "Console-App\Console-App-Both.csproj", "{79D1F22B-AF05-42F8-A1E2-0B0AE574D622}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Console-App-Client", "Console-App-Client\Console-App-Client.csproj", "{E6C2EC8B-D295-401F-AB95-8A387FE5507F}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Console-App-Server", "Console-App-Server\Console-App-Server.csproj", "{D8D1A910-477A-4803-92EC-C840FFF1B526}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Taurus.Plugin.DistributedTask_NetCore", "..\src\Taurus.Plugin.DistributedTask_NetCore.csproj", "{000504F2-A8AA-4A84-9E88-36D96A45EAF3}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CYQ.Data_NetCore", "..\..\..\cyqdata.git\cyqdata\src\CYQ.Data_NetCore.csproj", "{17458FA5-7BA2-4F3F-8634-34C9D63FB9FC}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Taurus.Plugin.DistributedTask.RabbitMQ_NetCore", "..\src\Taurus.Plugin.DistributedTask.RabbitMQ_NetCore.csproj", "{2C3872C4-358C-4A8F-A8C5-1CA335D6A878}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Taurus.Plugin.DistributedTask.Kafka_NetCore", "..\src\Taurus.Plugin.DistributedTask.Kafka_NetCore.csproj", "{6ACDFCE8-4A5A-4347-B57D-7C5C39E577EC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -35,22 +27,6 @@ Global
 		{D8D1A910-477A-4803-92EC-C840FFF1B526}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D8D1A910-477A-4803-92EC-C840FFF1B526}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D8D1A910-477A-4803-92EC-C840FFF1B526}.Release|Any CPU.Build.0 = Release|Any CPU
-		{000504F2-A8AA-4A84-9E88-36D96A45EAF3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{000504F2-A8AA-4A84-9E88-36D96A45EAF3}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{000504F2-A8AA-4A84-9E88-36D96A45EAF3}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{000504F2-A8AA-4A84-9E88-36D96A45EAF3}.Release|Any CPU.Build.0 = Release|Any CPU
-		{17458FA5-7BA2-4F3F-8634-34C9D63FB9FC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{17458FA5-7BA2-4F3F-8634-34C9D63FB9FC}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{17458FA5-7BA2-4F3F-8634-34C9D63FB9FC}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{17458FA5-7BA2-4F3F-8634-34C9D63FB9FC}.Release|Any CPU.Build.0 = Release|Any CPU
-		{2C3872C4-358C-4A8F-A8C5-1CA335D6A878}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2C3872C4-358C-4A8F-A8C5-1CA335D6A878}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2C3872C4-358C-4A8F-A8C5-1CA335D6A878}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2C3872C4-358C-4A8F-A8C5-1CA335D6A878}.Release|Any CPU.Build.0 = Release|Any CPU
-		{6ACDFCE8-4A5A-4347-B57D-7C5C39E577EC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6ACDFCE8-4A5A-4347-B57D-7C5C39E577EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6ACDFCE8-4A5A-4347-B57D-7C5C39E577EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{6ACDFCE8-4A5A-4347-B57D-7C5C39E577EC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

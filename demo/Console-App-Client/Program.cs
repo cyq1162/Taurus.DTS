@@ -72,7 +72,7 @@ namespace Console_App_Client
             }
             else
             {
-                for (int k = 0; k < 1000; k++)
+                for (int k = 0; k < 1; k++)
                 {
                     //发布一个即时任务
                     DTS.Client.Instant.PublishAsync("i publish a task instantly.", "DoInstantTask", "InstantCallBack");

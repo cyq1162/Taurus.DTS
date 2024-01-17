@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Taurus.Plugin.DistributedTask_NetCore.csproj" />
+    <PackageReference Include="Taurus.DTS.RabbitMQ" Version="3.3.0" />
   </ItemGroup>
 
 </Project>
