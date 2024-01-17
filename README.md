@@ -53,9 +53,11 @@ using Taurus.Plugin.DistributedTask;
 
 namespace Console_App_Server
 {
-    internal class Program
-    {
-        static void Main(string[] args)
+
+     internal class Program
+     {
+     
+         static void Main(string[] args)
         {
 
             DTSConfig.Server.Rabbit = "127.0.0.1;guest;guest;/";
@@ -87,7 +89,7 @@ namespace Console_App_Server
             return true;
         }
 
-        [DTSSubscribe("DoInstantTask")]
+        [DTSSubscribe("DoDelayTask")]
         private static bool B(DTSSubscribePara para)
         {
             para.CallBackContent = "show you b.";
@@ -138,10 +140,13 @@ using Taurus.Plugin.DistributedTask;
 
 namespace Console_App_Client
 {
-    internal class Program
-    {
+
+      internal class Program
+      {
+      
         static void Main(string[] args)
         {
+        
             DTSConfig.Client.IsPrintTraceLog = false;
             //AppConfig.Redis.Servers = "127.0.0.1:6379";
 
@@ -184,7 +189,7 @@ namespace Console_App_Client
             if (i == 2)
             {
                 //发布一个延时1分钟的任务
-                DTS.Client.Delay.PublishAsync(1, "i publish a delay task.", "DoInstantTask", "DelayCallBack");
+                DTS.Client.Delay.PublishAsync(1, "i publish a delay task.", "DoDelayTask", "DelayCallBack");
                 Console.WriteLine("Wait for 1 minute...");
             }
             else if (i == 3)
