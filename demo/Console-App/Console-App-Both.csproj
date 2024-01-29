@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Taurus.DTS" Version="3.3.0" />
+    <ProjectReference Include="..\..\src\Taurus.Plugin.DistributedTask_NetCore.csproj" />
   </ItemGroup>
 
 </Project>

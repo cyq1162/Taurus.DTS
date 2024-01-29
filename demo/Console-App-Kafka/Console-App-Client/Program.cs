@@ -12,16 +12,15 @@ namespace Console_App_Client
             DTSConfig.Client.IsPrintTraceLog = false;
             //AppConfig.Redis.Servers = "127.0.0.1:6379";
 
-            DTSConfig.Client.Rabbit = "127.0.0.1;guest;guest;/";
-            //DTSConfig.Client.Kafka = "127.0.0.1:9092;";
-            DTSConfig.Client.Conn = "server=.;database=mslog;uid=sa;pwd=123456";
+            DTSConfig.Client.Kafka = "127.0.0.1:9092;";
+            //DTSConfig.Client.Conn = "server=.;database=mslog;uid=sa;pwd=123456";
 
             DTSConfig.ProjectName = "ConsoleApp5";
 
             DTS.Client.Start();//start client and server
             
             Console.WriteLine("---------------------------------------");
-            Console.WriteLine("1-InstantTask、2-DelayTask（1Minutes）、3-CronTask、4-DeleteCronTask、5-BroadastTask");
+            Console.WriteLine("1-InstantTask、2-DelayTask（1Minutes）、3-CronTask、4-DeleteCronTask、5-BroadcastTask");
             Console.WriteLine("Input ：1、2、3、4、5，Press Enter.");
             while (true)
             {
@@ -68,7 +67,7 @@ namespace Console_App_Client
             else if (i == 5)
             {
                 //发布一个广播任务
-                DTS.Client.Broadast.PublishAsync("i publish a task for all server.", "DoBroadastTask", "BroadastCallBack");
+                DTS.Client.Broadcast.PublishAsync("i publish a task for all server.", "DoBroadastTask", "BroadcastCallBack");
             }
             else
             {
@@ -85,7 +84,7 @@ namespace Console_App_Client
         [DTSCallBack("InstantCallBack")]
         [DTSCallBack("DelayCallBack")]
         [DTSCallBack("CronCallBack")]
-        [DTSCallBack("BroadastCallBack")]
+        [DTSCallBack("BroadcastCallBack")]
         private static void OnCallBack(DTSCallBackPara para)
         {
             Console.WriteLine("Client callback : " + para.TaskType + " - " + para.CallBackKey + " - " + para.CallBackContent);

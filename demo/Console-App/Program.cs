@@ -9,12 +9,14 @@ namespace Console_App
     {
         static void StartWithConfig()
         {
-            DTSConfig.Client.IsPrintTraceLog = false;
-            DTSConfig.Server.IsPrintTraceLog = false;
+            DTSConfig.Client.IsPrintTraceLog = true;
+            DTSConfig.Server.IsPrintTraceLog = true;
 
-            DTSConfig.Client.Rabbit = "127.0.0.1;guest;guest;/";
-            DTSConfig.Server.Rabbit = "127.0.0.1;guest;guest;/";
+            //DTSConfig.Client.Rabbit = "127.0.0.1;guest;guest;/";
+            //DTSConfig.Server.Rabbit = "127.0.0.1;guest;guest;/";
 
+            DTSConfig.Client.Kafka = "127.0.0.1:9092";
+            DTSConfig.Server.Kafka = "127.0.0.1:9092";
             //DTSConfig.Client.Conn = "server=.;database=mslog;uid=sa;pwd=123456";
             //DTSConfig.Server.Conn = DTSConfig.Client.Conn;
 
@@ -28,7 +30,7 @@ namespace Console_App
             StartWithConfig();
             Thread.Sleep(1000);
             Console.WriteLine("---------------------------------------");
-            Console.WriteLine("1-InstantTask、2-DelayTask（1Minutes）、3-CronTask、4-DeleteCronTask、5-BroadastTask");
+            Console.WriteLine("1-InstantTask、2-DelayTask（1Minutes）、3-CronTask、4-DeleteCronTask、5-BroadcastTask");
             Console.WriteLine("Input ：1、2、3、4、5，Press Enter.");
             while (true)
             {
@@ -56,28 +58,33 @@ namespace Console_App
             if (i == 2)
             {
                 //发布一个延时1分钟的任务
+                Console.WriteLine("Execute task after 1 minute...");
                 DTS.Client.Delay.PublishAsync(1, "i publish a delay task.", "DoInstantTask", "DelayCallBack");
-                Console.WriteLine("Wait for 1 minute...");
+               
             }
             else if (i == 3)
             {
                 //发布一个秒在30时的循环任务。
+                Console.WriteLine("Create cron task [DoCronTask] : Wait for execute task when second is 10,30,50...");
                 DTS.Client.Cron.PublishAsync("10,30,50 * * * * ?", "i publish a timer task with cron express.", "DoCronTask", "CronCallBack");
-                Console.WriteLine("Wait for execute task when second is 10,30,50...");
+                
             }
             else if (i == 4)
             {
-                //发布一个秒在30时的循环任务。
+                //移除一个秒在30时的循环任务。
+                Console.WriteLine("Remove cron task [DoCronTask]");
                 DTS.Client.Cron.DeleteAsync("DoCronTask", null, "CronCallBack");
             }
             else if (i == 5)
             {
                 //发布一个广播任务
-                DTS.Client.Broadast.PublishAsync("i publish a task for all server.", "DoBroadastTask", "BroadastCallBack");
+                Console.WriteLine("Publish a broadcast task ");
+                DTS.Client.Broadcast.PublishAsync("i publish a task for all server.", "DoBroadcastTask", "BroadcastCallBack");
             }
             else
             {
                 //发布一个即时任务
+                Console.WriteLine("Publish a instant task ");
                 DTS.Client.Instant.PublishAsync("i publish a task instantly.", "DoInstantTask", "InstantCallBack");
             }
         }
@@ -85,7 +92,7 @@ namespace Console_App
         [DTSCallBack("InstantCallBack")]
         [DTSCallBack("DelayCallBack")]
         [DTSCallBack("CronCallBack")]
-        [DTSCallBack("BroadastCallBack")]
+        [DTSCallBack("BroadcastCallBack")]
         private static void OnCallBack(DTSCallBackPara para)
         {
             Console.WriteLine("Client callback : " + para.TaskType + " - " + para.CallBackKey + " - " + para.CallBackContent);
@@ -120,7 +127,7 @@ namespace Console_App
         /// <summary>
         /// 定时任务
         /// </summary>
-        [DTSSubscribe("DoBroadastTask")]
+        [DTSSubscribe("DoBroadcastTask")]
         private static bool TimerTask(DTSSubscribePara para)
         {
             para.CallBackContent = "show you d.";

@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.8.34408.163
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Console-App", "Console-App.csproj", "{79D1F22B-AF05-42F8-A1E2-0B0AE574D622}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Console-App-Both", "Console-App-Both.csproj", "{E8D28DB1-1BE2-4FED-83CB-56B0B59D6A75}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Taurus.Plugin.DistributedTask_NetCore", "..\..\src\Taurus.Plugin.DistributedTask_NetCore.csproj", "{6B792183-C8D4-463B-A59F-61C26C1A5A1D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,10 +13,14 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{79D1F22B-AF05-42F8-A1E2-0B0AE574D622}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{79D1F22B-AF05-42F8-A1E2-0B0AE574D622}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{79D1F22B-AF05-42F8-A1E2-0B0AE574D622}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{79D1F22B-AF05-42F8-A1E2-0B0AE574D622}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E8D28DB1-1BE2-4FED-83CB-56B0B59D6A75}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E8D28DB1-1BE2-4FED-83CB-56B0B59D6A75}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E8D28DB1-1BE2-4FED-83CB-56B0B59D6A75}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E8D28DB1-1BE2-4FED-83CB-56B0B59D6A75}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6B792183-C8D4-463B-A59F-61C26C1A5A1D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6B792183-C8D4-463B-A59F-61C26C1A5A1D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6B792183-C8D4-463B-A59F-61C26C1A5A1D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6B792183-C8D4-463B-A59F-61C26C1A5A1D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
