@@ -33,12 +33,7 @@ namespace Taurus.Plugin.DistributedTask
             {
                 get
                 {
-#if DEBUG
-                    return AppConfig.GetAppBool("DTS.Server.IsPrintTraceLog", true);
-#else
                     return AppConfig.GetAppBool("DTS.Server.IsPrintTraceLog", false);
-#endif
-
                 }
                 set
                 {

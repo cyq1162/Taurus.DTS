@@ -59,11 +59,17 @@ namespace Taurus.Plugin.DistributedTask
                                     }
                                     if (mQMsgs.Count > 0)
                                     {
+                                        string printMsg = "Client.MQ.PublishBatch : " + mQMsgs.Count + " items";
                                         if (MQ.Client.PublishBatch(mQMsgs))
                                         {
-                                            Log.Print("MQ.PublishBatch : " + mQMsgs.Count + " items.");
-                                            DTSConsole.WriteDebugLine("Client.MQ.PublishBatch : " + mQMsgs.Count + " items.");
+                                            printMsg += " - OK."; 
                                         }
+                                        else
+                                        {
+                                            printMsg += " - Fail.";
+                                        }
+                                        Log.Print(printMsg);
+                                        DTSConsole.WriteDebugLine(printMsg);
                                         mQMsgs.Clear();
                                     }
 
@@ -92,25 +98,28 @@ namespace Taurus.Plugin.DistributedTask
                         var mq = MQ.Client;
                         if (mq.MQType != MQType.Empty)
                         {
+                            string printMsg = "--------------------------------------------------" + Environment.NewLine;
                             if (mq.MQType == MQType.Rabbit)
                             {
                                 //对默认对列绑定交换机。
                                 bool isOK = MQ.Client.Listen(DTSConfig.Client.MQ.ProjectQueue, Client.OnReceived, DTSConfig.Client.MQ.ProjectExChange, false);
-                                DTSConsole.WriteDebugLine("DTS.Client." + mq.MQType + ".Listen : " + DTSConfig.Client.MQ.ProjectQueue + " - ExChange : " + DTSConfig.Client.MQ.ProjectExChange + (isOK ? " - OK." : " - Fail."));
+                                printMsg += "DTS.Client." + mq.MQType + ".Listen : " + DTSConfig.Client.MQ.ProjectQueue + " - ExChange : " + DTSConfig.Client.MQ.ProjectExChange + (isOK ? " - OK." : " - Fail.") + Environment.NewLine;
 
                                 isOK = MQ.Client.Listen(DTSConfig.Client.MQ.ProcessQueue, Client.OnReceived, DTSConfig.Client.MQ.ProcessExChange, true);
-                                DTSConsole.WriteDebugLine("DTS.Client." + mq.MQType + ".Listen : " + DTSConfig.Client.MQ.ProcessQueue + " - ExChange : " + DTSConfig.Client.MQ.ProcessExChange + (isOK ? " - OK." : " - Fail."));
+                                printMsg += "DTS.Client." + mq.MQType + ".Listen : " + DTSConfig.Client.MQ.ProcessQueue + " - ExChange : " + DTSConfig.Client.MQ.ProcessExChange + (isOK ? " - OK." : " - Fail.") + Environment.NewLine;
                             }
                             if (mq.MQType == MQType.Kafka)
                             {
                                 // 项目队列，只能有一个项目组消费
                                 bool isOK = MQ.Client.Listen(DTSConfig.Client.MQ.ProjectTopic, Client.OnReceived, DTSConfig.Client.MQ.ProjectGroup, false);
-                                DTSConsole.WriteDebugLine("DTS.Client." + mq.MQType + ".Listen : " + DTSConfig.Client.MQ.ProjectTopic + " -  Group : " + DTSConfig.Client.MQ.ProjectGroup + (isOK ? " - OK." : " - Fail."));
+                                printMsg += "DTS.Client." + mq.MQType + ".Listen : " + DTSConfig.Client.MQ.ProjectTopic + " -  Group : " + DTSConfig.Client.MQ.ProjectGroup + (isOK ? " - OK." : " - Fail.") + Environment.NewLine;
 
                                 // 进程队列，可以有多个进程组消费
                                 isOK = MQ.Client.Listen(DTSConfig.Client.MQ.ProcessTopic, Client.OnReceived, DTSConfig.Client.MQ.ProcessGroup, true);
-                                DTSConsole.WriteDebugLine("DTS.Client." + mq.MQType + ".Listen : " + DTSConfig.Client.MQ.ProcessTopic + " -  Group : " + DTSConfig.Client.MQ.ProcessGroup + (isOK ? " - OK." : " - Fail."));
+                                printMsg += "DTS.Client." + mq.MQType + ".Listen : " + DTSConfig.Client.MQ.ProcessTopic + " -  Group : " + DTSConfig.Client.MQ.ProcessGroup + (isOK ? " - OK." : " - Fail.") + Environment.NewLine;
                             }
+                            printMsg += "--------------------------------------------------" + Environment.NewLine;
+                            DTSConsole.WriteLine(printMsg);
                         }
                     }
                 }

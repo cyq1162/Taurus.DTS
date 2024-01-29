@@ -35,6 +35,7 @@ namespace Taurus.Plugin.DistributedTask
                         {
                             if (!declareQueueNames.Contains(msg.QueueName))
                             {
+                                //只有延时队列需要定义，且参数一致，可重复定义。
                                 if (msg.DelayMinutes.HasValue && msg.DelayMinutes.Value > 0 && !string.IsNullOrEmpty(msg.ExChange))
                                 {
                                     //绑定交换机
@@ -42,9 +43,10 @@ namespace Taurus.Plugin.DistributedTask
                                     arg.Add("x-dead-letter-exchange", msg.ExChange);//使用默认交换机
                                     //arg.Add("x-dead-letter-routing-key", "");//设置转移到的队列
                                     arg.Add("x-message-ttl", msg.DelayMinutes.Value * 60 * 1000);//设置过期时间
-                                    channel.QueueDeclare(msg.QueueName, true, false, false, arguments: arg);//允许丢失，不需要持久化。
+                                    channel.QueueDeclare(msg.QueueName, true, false, false, arguments: arg);
                                     declareQueueNames.Add(msg.QueueName);
                                 }
+                                //这里不能定义队列，队列可能是永久队列和临时队列，参数不一致，不能重复定义。
                             }
                             IBasicProperties basic = null;
                             if (!string.IsNullOrEmpty(msg.ExChange))

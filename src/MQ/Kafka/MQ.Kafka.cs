@@ -222,8 +222,11 @@ namespace Taurus.Plugin.DistributedTask
                         try
                         {
                             var consumeResult = consumer.Consume();
-                            para.Message = consumeResult.Value;
-                            ThreadPool.QueueUserWorkItem(new WaitCallback(OnReceive), para);
+                            ListenPara listenPara = new ListenPara();
+                            listenPara.Message= consumeResult.Value;
+                            listenPara.Event=para.Event;
+                            listenPara.Topic= para.Topic;
+                            OnReceive(listenPara);
                         }
                         catch (Exception err)
                         {
@@ -243,9 +246,8 @@ namespace Taurus.Plugin.DistributedTask
 
         }
 
-        private void OnReceive(object topicObj)
+        private void OnReceive(ListenPara para)
         {
-            ListenPara para = topicObj as ListenPara;
             MQMsg msg = MQMsg.Create(para.Message);
 
             //反转队列名称和监听key
@@ -305,7 +307,7 @@ namespace Taurus.Plugin.DistributedTask
                     topics.Clear();
                     foreach (var topic in metadata.Topics)
                     {
-                        if (!topics.Contains(topic.Topic))
+                        if (topic.Topic.StartsWith("DTS_") && !topics.Contains(topic.Topic))
                         {
                             topics.Add(topic.Topic);
                         }

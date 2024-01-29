@@ -15,7 +15,7 @@ namespace Taurus.Plugin.DistributedTask
             {
                 public CronTable()
                 {
-                    SetInit(this, DTSConfig.Client.CronTable, DTSConfig.Client.Conn);
+                    SetInit(this, DTSConfig.Client.CronTable, DTSConfig.Client.Conn, true);
                 }
                 private long? _ID;
                 /// <summary>

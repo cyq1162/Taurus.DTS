@@ -3,10 +3,10 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
       <AssemblyName>Taurus.DTS</AssemblyName>
-	  <AssemblyVersion>3.3.0.0</AssemblyVersion>
-	  <FileVersion>3.3.0.0</FileVersion>
+	  <AssemblyVersion>3.3.1</AssemblyVersion>
+	  <FileVersion>3.3.1</FileVersion>
 	  <Authors>路过秋天</Authors>
-	  <Company>路过秋天 （2024-01-16）</Company>
+	  <Company>路过秋天 （2024-01-29）</Company>
 	  <Copyright>Copyright ©  路过秋天 2024-2124</Copyright>
 	  <AssemblyTitle>Taurus.DTS 分布式任务框架 .Net Standard2.1 版本</AssemblyTitle>
 	  <Product>Taurus.DTS 分布式任务框架 .NET Core 版本</Product>
@@ -34,10 +34,7 @@
   <ItemGroup>
     <PackageReference Include="Confluent.Kafka" Version="2.3.0" />
     <PackageReference Include="RabbitMQ.Client" Version="6.8.1" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\cyqdata.git\cyqdata\src\CYQ.Data_Standard.csproj" />
+    <PackageReference Include="Taurus.DistributedLock" Version="2.0.1.1" />
   </ItemGroup>
 
 </Project>

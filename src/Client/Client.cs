@@ -1,5 +1,4 @@
 ﻿using CYQ.Data.Json;
-using CYQ.Data.Lock;
 using System;
 using System.IO;
 
@@ -166,7 +165,7 @@ namespace Taurus.Plugin.DistributedTask
             /// <summary>
             /// 广播任务，所有在线进程都收到同一个信息。
             /// </summary>
-            public static class Broadast
+            public static class Broadcast
             {
 
                 /// <summary>

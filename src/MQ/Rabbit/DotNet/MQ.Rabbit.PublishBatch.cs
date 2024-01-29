@@ -38,6 +38,7 @@ namespace Taurus.Plugin.DistributedTask
                         {
                             if (!declareQueueNames.Contains(msg.QueueName))
                             {
+                                //只有延时队列需要定义，且参数一致，可重复定义。
                                 if (msg.DelayMinutes.HasValue && msg.DelayMinutes.Value > 0 && !string.IsNullOrEmpty(msg.ExChange))
                                 {
                                     //绑定交换机
@@ -48,6 +49,7 @@ namespace Taurus.Plugin.DistributedTask
                                     channel.QueueDeclare(msg.QueueName, true, false, false, arguments: arg);//允许丢失，不需要持久化。
                                     declareQueueNames.Add(msg.QueueName);
                                 }
+                                //这里不能定义队列，队列可能是永久队列和临时队列，参数不一致，不能重复定义。
                             }
                             IBasicProperties basic = null;
                             if (!string.IsNullOrEmpty(msg.ExChange))

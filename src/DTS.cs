@@ -49,7 +49,9 @@ namespace Taurus.Plugin.DistributedTask
             {
                 if (DTSConfig.Client.IsEnable)
                 {
+                    DTSConsole.WriteDebugLine("--------------------------------------------------");
                     DTSConsole.WriteDebugLine("DTS.Client.Start = true , Version = " + Version);
+                    DTSConsole.WriteDebugLine("--------------------------------------------------");
                     DTS.Client.Worker.Scanner.Start();// 扫描数据库，重发任务
                     DTS.Client.CronWorker.Scanner.Start();//启动Cron表达式的定时任务扫描。
                 }
@@ -63,7 +65,9 @@ namespace Taurus.Plugin.DistributedTask
             {
                 if (DTSConfig.Server.IsEnable)
                 {
+                    DTSConsole.WriteDebugLine("--------------------------------------------------");
                     DTSConsole.WriteDebugLine("DTS.Server.Start = true , Version = " + Version);
+                    DTSConsole.WriteDebugLine("--------------------------------------------------");
                     DTS.Server.Worker.Scanner.Start();//启动队列监听，同时清理过期数据。
                 }
             }
@@ -74,10 +78,8 @@ namespace Taurus.Plugin.DistributedTask
         /// </summary>
         public static void Start()
         {
-            DTSConsole.WriteDebugLine("--------------------------------------------------");
             Client.Start();
             Server.Start();
-            DTSConsole.WriteDebugLine("--------------------------------------------------");
         }
     }
 

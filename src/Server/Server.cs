@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Reflection;
 using CYQ.Data;
-using CYQ.Data.Lock;
+using Taurus.Plugin.DistributedLock;
 
 namespace Taurus.Plugin.DistributedTask
 {
@@ -24,47 +24,35 @@ namespace Taurus.Plugin.DistributedTask
                 }
                 else if (mqType == MQType.Kafka)
                 {
-                    bool isWriteTxt = string.IsNullOrEmpty(DTSConfig.Server.Conn) && DistributedLock.Instance.LockType == LockType.Local;
+                    bool isWriteTxt = string.IsNullOrEmpty(DTSConfig.Server.Conn) && DLock.Instance.LockType == DLockType.Local;
                     msg.CallBackName = isWriteTxt ? DTSConfig.Server.MQ.ProcessTopic : DTSConfig.Server.MQ.ProjectTopic;
                 }
-
-                Log.Print("MQ.OnReceived : " + msg.ToJson());
-                bool isDeleteAck = msg.IsDeleteAck.HasValue && msg.IsDeleteAck.Value;
-                DTSConsole.WriteDebugLine("Server.MQ.OnReceived : " + msg.MsgID + " - " + msg.TaskType + " - " + (isDeleteAck ? " - DeleteAck" : "") + " - NextTo :" + msg.QueueName);
-
-                if (isDeleteAck)
-                {
-                    //打印分隔线，以便查看
-                    DTSConsole.WriteDebugLine("------------------------End  ：" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss:fff") + "-------------------------");
-                }
-                else
-                {
-                    //打印分隔线，以便查看
-                    DTSConsole.WriteDebugLine("------------------------Start：" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss:fff") + "-------------------------");
-                }
-
-                var localLock = DistributedLock.Local;
-                string key = "DTS.Server." + msg.MsgID;
-                bool isLockOK = false;
                 try
                 {
-                    isLockOK = localLock.Lock(key, 10000);
-                    OnDoTask(msg);
+                    //不加锁：一个广播可能多个进程同时执行。
+                    string printMsg = "-------------------Server " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss:fff") + " - " + msg.TaskType + " --------------------" + Environment.NewLine;
+                    printMsg += "Server.MQ.OnReceived : " + msg.MsgID + Environment.NewLine;
+                    OnDoTask(msg, ref printMsg);
+                    if (msg.IsDeleteAck.HasValue && msg.IsDeleteAck.Value)
+                    {
+                        //打印分隔线，以便查看
+                        printMsg += "-------------------Server " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss:fff") + " - END -----------------------" + Environment.NewLine;
+                    }
+                    else
+                    {
+                        //打印分隔线，以便查看
+                        printMsg += "-------------------Server " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss:fff") + " ------------------------------" + Environment.NewLine;
+                    }
+                    DTSConsole.WriteDebugLine(printMsg);
+                    Log.Print(printMsg);
                 }
                 catch (Exception err)
                 {
                     Log.Error(err);
                 }
-                finally
-                {
-                    if (isLockOK)
-                    {
-                        localLock.UnLock(key);
-                    }
-                }
             }
 
-            private static void OnDoTask(MQMsg msg)
+            private static void OnDoTask(MQMsg msg, ref string printMsg)
             {
                 if (msg.IsDeleteAck.HasValue && msg.IsDeleteAck.Value)
                 {
@@ -101,24 +89,34 @@ namespace Taurus.Plugin.DistributedTask
                         msg.IsFirstAck = false;
                         msg.DelayMinutes = 0;
                         Worker.MQPublisher.Add(msg);
-                        //DTCLog.WriteDebugLine("Server.OnDoTask 方法已执行过，发送MQ响应：IsFirstAck = false。");
+                        printMsg += (msg.MsgID + " processed, return directly." + Environment.NewLine);
+                        printMsg += "NextTo :" + msg.QueueName + Environment.NewLine;
                         return;
                     }
                 }
                 #endregion
 
                 MethodInfo method = MethodCollector.GetServerMethod(msg.CallBackKey);
-                if (method == null) { return; }//没有对应的绑定信息，直接丢失信息。
+                if (method == null)
+                {
+                    printMsg += ("No callback method for execute, return directly." + Environment.NewLine);
+                    return;
+                }
                 string returnContent = null;
                 try
                 {
+                    printMsg += "Server.Execute." + msg.TaskType + ".Method : " + method.Name + " - SubKey :" + msg.CallBackKey + Environment.NewLine;
                     DTSSubscribePara para = new DTSSubscribePara(msg);
                     object obj = method.IsStatic ? null : Activator.CreateInstance(method.DeclaringType);
                     object result = method.Invoke(obj, new object[] { para });
-                    if (result is bool && !(bool)result) { return; }
+                    if (result is bool && !(bool)result)
+                    {
+                        printMsg += ("Execute result return false, return directly." + Environment.NewLine);
+                        return;
+                    }
                     returnContent = para.CallBackContent;
-                    Log.Print("Execute." + msg.TaskType + ".Method : " + method.Name + " - SubKey :" + msg.CallBackKey);
-                    DTSConsole.WriteDebugLine("Server.Execute." + msg.TaskType + ".Method : " + method.Name + " - SubKey :" + msg.CallBackKey);
+
+                    printMsg += "NextTo :" + msg.QueueName + Environment.NewLine;
                 }
                 catch (Exception err)
                 {

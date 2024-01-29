@@ -1,12 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
 	  <AssemblyName>Taurus.DTS</AssemblyName>
-	  <AssemblyVersion>3.3.0</AssemblyVersion>
-	  <FileVersion>3.3.0</FileVersion>
+	  <AssemblyVersion>3.3.1</AssemblyVersion>
+	  <FileVersion>3.3.1</FileVersion>
 	  <Authors>路过秋天</Authors>
-	  <Company>路过秋天 （2024-01-17）</Company>
+	  <Company>路过秋天 （2024-01-29）</Company>
 	  <Copyright>Copyright ©  路过秋天 2024-2124</Copyright>
 	  <AssemblyTitle>Taurus.DTS 分布式任务框架 .Net Core 版本</AssemblyTitle>
 	  <Product>Taurus.DTS 分布式任务框架 .NET Core 版本</Product>
@@ -19,10 +19,13 @@
 
   <ItemGroup>
     <Compile Remove="MQ\Rabbit\DotNet\**" />
+    <Compile Remove="packages\**" />
     <Compile Remove="Properties\**" />
     <EmbeddedResource Remove="MQ\Rabbit\DotNet\**" />
+    <EmbeddedResource Remove="packages\**" />
     <EmbeddedResource Remove="Properties\**" />
     <None Remove="MQ\Rabbit\DotNet\**" />
+    <None Remove="packages\**" />
     <None Remove="Properties\**" />
   </ItemGroup>
 
@@ -34,10 +37,7 @@
   <ItemGroup>
     <PackageReference Include="Confluent.Kafka" Version="2.3.0" />
     <PackageReference Include="RabbitMQ.Client" Version="6.8.1" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\cyqdata.git\cyqdata\src\CYQ.Data_NetCore.csproj" />
+    <PackageReference Include="Taurus.DistributedLock" Version="2.0.1.1" />
   </ItemGroup>
 
   <ItemGroup>

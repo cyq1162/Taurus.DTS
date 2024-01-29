@@ -1,11 +1,11 @@
 ﻿using CYQ.Data;
 using CYQ.Data.Table;
 using CYQ.Data.Tool;
-using CYQ.Data.Lock;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
+using Taurus.Plugin.DistributedLock;
 
 namespace Taurus.Plugin.DistributedTask
 {
@@ -65,15 +65,17 @@ namespace Taurus.Plugin.DistributedTask
                                     {
                                         if (!string.IsNullOrEmpty(DTSConfig.Client.Conn))
                                         {
-                                            isLockOK = DistributedLock.Instance.Lock(lockKey, 1);
+                                            isLockOK = DLock.Instance.Lock(lockKey, 1);
                                             if (isLockOK)
                                             {
                                                 ScanDB_DeleteConfirm();
-                                                ScanDB_DeleteTimeout();
-
-                                                if (empty % 120 == 0)
+                                                if (empty % 60 == 0)
                                                 {
-                                                    ScanDB_Retry();//数据库仅允许一个在扫描
+                                                    ScanDB_DeleteTimeout();
+                                                    if (empty % 120 == 0)
+                                                    {
+                                                        ScanDB_Retry();//数据库仅允许一个在扫描
+                                                    }
                                                 }
                                             }
 
@@ -81,7 +83,7 @@ namespace Taurus.Plugin.DistributedTask
                                     }
                                     finally
                                     {
-                                        if (isLockOK) { DistributedLock.Instance.UnLock(lockKey); }
+                                        if (isLockOK) { DLock.Instance.UnLock(lockKey); }
                                     }
                                     #endregion
 
@@ -89,7 +91,7 @@ namespace Taurus.Plugin.DistributedTask
                                     {
                                         try
                                         {
-                                            isLockOK = DistributedLock.Local.Lock(lockKey, 1);
+                                            isLockOK = DLock.Local.Lock(lockKey, 1);
                                             if (isLockOK)
                                             {
                                                 ScanIO_Retry();//硬盘每个进程都需要扫描，但延时处理。
@@ -97,7 +99,7 @@ namespace Taurus.Plugin.DistributedTask
                                         }
                                         finally
                                         {
-                                            if (isLockOK) { DistributedLock.Local.UnLock(lockKey); }
+                                            if (isLockOK) { DLock.Local.UnLock(lockKey); }
                                         }
 
                                     }
@@ -295,8 +297,9 @@ namespace Taurus.Plugin.DistributedTask
                             //批量发送
                             if (msgList.Count > 0 && MQ.Client.PublishBatch(msgList))
                             {
-                                Log.Print("ScanIO.MQ.PublishBatch.ToRetryExChange :" + msgList.Count + " items.");
-                                DTSConsole.WriteDebugLine("Client.ScanIO.MQ.PublishBatch.ToRetryExChange :" + msgList.Count + " items.");
+                                string printMsg = "Client.ScanIO.MQ.PublishBatch.Retry :" + msgList.Count + " items.";
+                                Log.Print(printMsg);
+                                DTSConsole.WriteDebugLine(printMsg);
                             }
                         }
                     }

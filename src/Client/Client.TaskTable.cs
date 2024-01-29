@@ -18,7 +18,7 @@ namespace Taurus.Plugin.DistributedTask
             {
                 public TaskTable()
                 {
-                    SetInit(this, DTSConfig.Client.TaskTable, DTSConfig.Client.Conn);
+                    SetInit(this, DTSConfig.Client.TaskTable, DTSConfig.Client.Conn, true);
                 }
                 private long? _ID;
                 /// <summary>

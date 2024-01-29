@@ -1,10 +1,10 @@
 ﻿using CYQ.Data;
-using CYQ.Data.Lock;
 using CYQ.Data.Table;
 using CYQ.Data.Tool;
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using Taurus.Plugin.DistributedLock;
 
 namespace Taurus.Plugin.DistributedTask
 {
@@ -63,7 +63,7 @@ namespace Taurus.Plugin.DistributedTask
                                 {
                                     if (!string.IsNullOrEmpty(DTSConfig.Server.Conn))
                                     {
-                                        isLockOK = DistributedLock.Instance.Lock(lockKey, 1);
+                                        isLockOK = DLock.Instance.Lock(lockKey, 1);
                                         if (isLockOK)
                                         {
                                             if (empty % 3 == 0)
@@ -87,7 +87,7 @@ namespace Taurus.Plugin.DistributedTask
                                 {
                                     if (isLockOK)
                                     {
-                                        DistributedLock.Instance.UnLock(lockKey);
+                                        DLock.Instance.UnLock(lockKey);
                                     }
                                 }
 
@@ -144,8 +144,9 @@ namespace Taurus.Plugin.DistributedTask
                                 }
                                 if (MQ.Client.PublishBatch(msgList))
                                 {
-                                    Log.Print("ScanDB.MQ.PublishBatch :" + msgList.Count + " items.");
-                                    DTSConsole.WriteDebugLine("Server.ScanDB.MQ.PublishBatch :" + msgList.Count + " items.");
+                                    string printMsg = "Server.ScanDB.MQ.PublishBatch.Retry :" + msgList.Count + " items.";
+                                    Log.Print(printMsg);
+                                    DTSConsole.WriteDebugLine(printMsg);
                                     foreach (var row in dtSend.Rows)
                                     {
                                         row.Set("Retries", row.Get<int>("Retries") + 1, 2);
