@@ -11,8 +11,8 @@ namespace Taurus.Plugin.DistributedTask
             InitMethods();
         }
         //这里区分大小写，是为了保持用户方法传的key和回调key一致。
-        private static MDictionary<string, MethodInfo> dicServerMethods = new MDictionary<string, MethodInfo>();
-        private static MDictionary<string, MethodInfo> dicClientMethods = new MDictionary<string, MethodInfo>();
+        private static Dictionary<string, MethodInfo> dicServerMethods = new Dictionary<string, MethodInfo>();
+        private static Dictionary<string, MethodInfo> dicClientMethods = new Dictionary<string, MethodInfo>();
         private static void InitMethods()
         {
             List<Assembly> assList = AssemblyCollector.GetRefAssemblyList();
